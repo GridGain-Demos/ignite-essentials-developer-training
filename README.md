@@ -110,7 +110,7 @@ going to run basic SQL operations as well as more advanced ones.
  
 2. Run the following query to find top-20 longest tracks:
 
-    ```
+    ```sql
     SELECT trackid, name, MAX(milliseconds / (1000 * 60)) as duration FROM track
     WHERE genreId < 17
     GROUP BY trackid, name ORDER BY duration DESC LIMIT 20;
@@ -159,11 +159,11 @@ avoid the usage of the non-colocated joins:
         ```
     * Clean the metadata for the `Track` object:
         ```bash
-        java -cp libs/core.jar org.apache.ignite.internal.commandline.CommandHandler --enable-experimental=true --meta remove --typeName training.model.Track
+        java -cp libs/core.jar org.apache.ignite.internal.commandline.CommandHandler --meta remove --typeName training.model.Track
         ```
     * Clean the metadata for the `TrackKey` object:
         ```bash
-        java -cp libs/core.jar org.apache.ignite.internal.commandline.CommandHandler --enable-experimental=true --meta remove --typeName training.model.TrackKey
+        java -cp libs/core.jar org.apache.ignite.internal.commandline.CommandHandler --meta remove --typeName training.model.TrackKey
         ```          
 5. Recreate the table using the SQLLine tool:
     * Launch SQLine from a terminal window:
