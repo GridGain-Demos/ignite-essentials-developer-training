@@ -9,6 +9,16 @@ Check the schedule (TBD) and join one of our upcoming training sessions.
 * Apache Maven 3.0 or later
 * Your favorite IDE, such as IntelliJ IDEA, or Eclipse, or a simple text editor.
 
+## Clone The Project
+
+1. Clone the training project with Git or download it as an archive:
+    ```bash
+    git clone https://github.com/GridGain-Demos/ignite-essentials-developer-training.git
+    ```
+
+2. (optionally), open in your favourite IDE such as IntelliJ or Eclipse, or just use a simple text editor
+and command-line instructions prepared for all the samples.    
+
 ## Starting Ignite Cluster
 
 Start a two-node Ignite cluster:
@@ -16,11 +26,11 @@ Start a two-node Ignite cluster:
 1. Open a terminal window and navigate to the root directory of this project.
 
 2. Use Maven to create a core executable JAR with all the dependencies (Note, build the JAR even if you plan to
-start the sample code with IntellijIdea or Eclipse. The JAR is used by other tools throughout the class):
+start the sample code with IntelliJ IDEA or Eclipse. The JAR is used by other tools throughout the class):
     ```bash
     mvn clean package -P core
     ```
-3. Start the first cluster node (or just start the app with IntellijIdea or Eclipse):
+3. Start the first cluster node (or just start the app with IntelliJ IDEA or Eclipse):
     ```bash
     java -cp libs/core.jar training.ServerStartup
     ```
@@ -180,7 +190,7 @@ Run `training.ComputeApp` that uses Apache Ignite compute capabilities for a cal
 The compute task executes on every cluster node, iterates through local records and responds to the application that 
 merges partial results.
 
-1. Run the app in a terminal window to see how it works (or just start the app with IntellijIdea or Eclipse):
+1. Run the app in a terminal window to see how it works (or just start the app with IntelliJ IDEA or Eclipse):
     ```bash
     java -cp libs/apps.jar training.ComputeApp
     ```
@@ -192,7 +202,7 @@ Modify the computation logic:
 
 1. Update the logic to return top-10 paying customers.
 
-2. Build an executable JAR with the applications' classes (or just start the app with IntellijIdea or Eclipse):
+2. Build an executable JAR with the applications' classes (or just start the app with IntelliJ IDEA or Eclipse):
     ```bash
     mvn clean package -P apps
     ```
