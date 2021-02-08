@@ -190,19 +190,22 @@ Run `training.ComputeApp` that uses Apache Ignite compute capabilities for a cal
 The compute task executes on every cluster node, iterates through local records and responds to the application that 
 merges partial results.
 
-1. Run the app in a terminal window to see how it works (or just start the app with IntelliJ IDEA or Eclipse):
+1. Build an executable JAR with the applications' classes (or just start the app with IntelliJ IDEA or Eclipse):
+    ```bash
+    mvn clean package -P apps
+    ```
+2. Run the app in the terminal:
     ```bash
     java -cp libs/apps.jar training.ComputeApp
     ```
-
-2. Check the logs of the `ServerStartup` processes (your Ignite server nodes) to see that the calculation
+3. Check the logs of the `ServerStartup` processes (your Ignite server nodes) to see that the calculation
 was executed across the cluster.
 
 Modify the computation logic: 
 
 1. Update the logic to return top-10 paying customers.
 
-2. Build an executable JAR with the applications' classes (or just start the app with IntelliJ IDEA or Eclipse):
+2. Re-build an executable JAR with the applications' classes (or just start the app with IntelliJ IDEA or Eclipse):
     ```bash
     mvn clean package -P apps
     ```
