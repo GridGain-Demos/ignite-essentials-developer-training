@@ -16,7 +16,7 @@ Check the schedule (TBD) and join one of our upcoming training sessions.
     git clone https://github.com/GridGain-Demos/ignite-essentials-developer-training.git
     ```
 
-2. (optionally), open in your favourite IDE such as IntelliJ or Eclipse, or just use a simple text editor
+2. (optionally), open the project in your favourite IDE such as IntelliJ or Eclipse, or just use a simple text editor
 and command-line instructions prepared for all the samples.    
 
 ## Starting Ignite Cluster
