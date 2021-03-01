@@ -1,7 +1,7 @@
-# [Developer Training] Apache Ignite Essentials - Key Design Principles for Building Data-Intensive Applications
+# [Foundation Course] Apache Ignite Essentials: Key Design Principles for Building Data-Intensive Applications
 
 This project is designed for a free instructor-led training on the Ignite essential capabilities and architecture internals.
-Check the schedule (TBD) and join one of our upcoming training sessions.
+Check [the complete schedule](https://www.gridgain.com/products/services/training/apache-ignite-workshop-Key-design-principles-for-building-data-intensive-applications) and join one of our upcoming training sessions.
 
 ## Setting Up Environment
 
