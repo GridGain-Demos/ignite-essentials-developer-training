@@ -153,10 +153,14 @@ avoid the usage of the non-colocated joins:
 
     * Open a terminal window and navigate to the root directory of this project.
     
-    * Enable the experimental features:
+    * Enable the experimental features (Mac and Linux):
         ```bash
         export IGNITE_ENABLE_EXPERIMENTAL_COMMAND=true
         ```
+    * Enable the experimental features (Windows):
+        ```bash
+        set IGNITE_ENABLE_EXPERIMENTAL_COMMAND=true
+       ```
     * Clean the metadata for the `Track` object:
         ```bash
         java -cp libs/core.jar org.apache.ignite.internal.commandline.CommandHandler --meta remove --typeName training.model.Track
