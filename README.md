@@ -30,6 +30,9 @@ start the sample code with IntelliJ IDEA or Eclipse. The JAR is used by other to
     ```bash
     mvn clean package -P core
     ```
+   If you see build errors, it may be because a firewall or proxy server is blocking access to
+[GridGain's External Maven Repo](https://www.gridgainsystems.com/nexus/content/repositories/external) which is used
+to download the module that connects to Control Center.
 3. Start the first cluster node (or just start the app with IntelliJ IDEA or Eclipse):
     ```bash
     java -cp libs/core.jar training.ServerStartup
