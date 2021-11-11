@@ -47,10 +47,10 @@ Both nodes auto-discover each other and you'll have a two-nodes cluster ready fo
  
 ## Connecting to GridGain Control Center
 
-You use [GridGain Control Center](https://control.gridgain.com) throughout the course to see how Ignite distributes 
+You use [GridGain Control Center](https://portal.gridgain.com) throughout the course to see how Ignite distributes 
 records, to execute and optimize SQL queries, and to monitor the state of the cluster.
 
-1. Go to [https://control.gridgain.com](https://control.gridgain.com).
+1. Go to [https://portal.gridgain.com](https://portal.gridgain.com).
 
 2. Create an account to sign in into Control Center.
 
