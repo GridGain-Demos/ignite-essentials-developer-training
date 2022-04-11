@@ -32,7 +32,7 @@ start the sample code with IntelliJ IDEA or Eclipse. The JAR is used by other to
     ```
    If you see build errors, it may be because a firewall or proxy server is blocking access to
 [GridGain's External Maven Repo](https://www.gridgainsystems.com/nexus/content/repositories/external) which is used
-to download the module that connects to Control Center.
+to download the module that connects to GridGain Nebula.
 3. Start the first cluster node (or just start the app with IntelliJ IDEA or Eclipse):
     ```bash
     java -cp libs/core.jar training.ServerStartup
@@ -45,14 +45,13 @@ to download the module that connects to Control Center.
 
 Both nodes auto-discover each other and you'll have a two-nodes cluster ready for exercises.
  
-## Connecting to GridGain Control Center
-
-You use [GridGain Control Center](https://portal.gridgain.com) throughout the course to see how Ignite distributes 
+## Connecting to GridGain Nebula
+You use [GridGain Nebula](https://portal.gridgain.com) throughout the course to see how Ignite distributes 
 records, to execute and optimize SQL queries, and to monitor the state of the cluster.
 
 1. Go to [https://portal.gridgain.com](https://portal.gridgain.com).
 
-2. Create an account to sign in into Control Center.
+2. Create an account to sign in into GridGain Nebula.
 
 3. Just in case, generate a new token for the cluster (the default token expires in 5 minutes after the cluster startup time):
 
@@ -65,7 +64,7 @@ records, to execute and optimize SQL queries, and to monitor the state of the cl
         java -cp libs/core.jar org.gridgain.control.agent.commandline.ManagementCommandHandler --token
         ```              
 
-4. [Register the cluster](https://www.gridgain.com/docs/control-center/latest/clusters#adding-clusters) with Control Center 
+4. [Register the cluster](https://www.gridgain.com/docs/control-center/latest/clusters#adding-clusters) with GridGain Nebula 
 using the token.
 
 ## Creating Media Store Schema and Loading Data
@@ -96,7 +95,7 @@ Keep the connection open as you'll use it for following exercises.
 With the Media Store database loaded, you can check how Ignite distributed the records within the cluster:
 
 1. Open the [Caches Screen](https://www.gridgain.com/docs/control-center/latest/caches#partition-distribution) of 
-Control Center.
+GridGain Nebula.
 
 2. While on that screen, follow the instructor to learn some insights.
 
@@ -109,7 +108,7 @@ going to run basic SQL operations as well as more advanced ones.
 
 ### Querying Single Table
 
-1. Go to the [SQL Notebooks Screen](https://www.gridgain.com/docs/control-center/latest/querying) of Control Center.
+1. Go to the [SQL Notebooks Screen](https://www.gridgain.com/docs/control-center/latest/querying) of GridGain Nebula.
  
 2. Run the following query to find top-20 longest tracks:
 
@@ -136,7 +135,7 @@ JOIN with the `Artist` table:
     Once you run the query, you'll see that the `artist` column is blank for some records. That's because `Track` and 
     `Artist` tables are not co-located and the nodes don't have all data available locally during the join phase.
     
-2. Allow the non-colocated joins by enabling the `Allow non-colocated joins` checkbox on the Control Center screen.
+2. Allow the non-colocated joins by enabling the `Allow non-colocated joins` checkbox on the GridGain Nebula screen.
 
 3. Run the query again to see a complete and correct result.
 
@@ -188,7 +187,7 @@ avoid the usage of the non-colocated joins:
         !run config/media_store.sql
         ```
 
-6. In Control Center, run that query once again and you'll see that all the `artist` columns are filled in because now 
+6. In GridGain Nebula, run that query once again and you'll see that all the `artist` columns are filled in because now 
 all the Tracks are stored together with their Artists on the same cluster node.
 
 ## Running Co-located Compute Tasks
