@@ -28,10 +28,13 @@
         http://www.springframework.org/schema/beans/spring-beans.xsd
         http://www.springframework.org/schema/util
         http://www.springframework.org/schema/util/spring-util.xsd">
-    <bean class="org.apache.ignite.configuration.IgniteConfiguration">
-        <!-- Set to true to enable distributed class loading for examples, default is false. -->
-        <property name="peerClassLoadingEnabled" value="true"/>
 
+    <bean id="User" class="org.apache.ignite.plugin.security.SecurityCredentials">
+        <constructor-arg value="USERNAME"/>
+        <constructor-arg value="PASSWORD"/>
+    </bean>
+
+    <bean class="org.apache.ignite.configuration.IgniteConfiguration">
         <!-- Memory configuration. -->
         <property name="dataStorageConfiguration">
             <bean class="org.apache.ignite.configuration.DataStorageConfiguration">
@@ -50,6 +53,26 @@
             </bean>
         </property>
 
+        <property name="sslContextFactory">
+            <bean class="org.apache.ignite.ssl.SslContextFactory"/>
+        </property>
+
+        <property name="pluginConfigurations">
+            <bean class="org.gridgain.grid.configuration.GridGainConfiguration">
+                <property name="securityCredentialsProvider">
+                    <bean class="org.apache.ignite.plugin.security.SecurityCredentialsBasicProvider">
+                        <constructor-arg ref="User"/>
+                    </bean>
+                </property>
+                <property name="rollingUpdatesEnabled" value="true"/>
+            </bean>
+        </property>
+
+        <property name="communicationSpi">
+            <bean class="org.apache.ignite.spi.communication.tcp.TcpCommunicationSpi">
+                <property name="forceClientToServerConnections" value="true"/>
+            </bean>
+        </property>
 
         <!-- Configuring the IP finder for nodes auto-discovery. -->
         <property name="discoverySpi">
@@ -59,7 +82,7 @@
                         <property name="addresses">
                             <list>
                                 <!-- In distributed environment, replace with actual host IP address. -->
-                                <value>127.0.0.1:47500..47509</value>
+                                <value>CONNECTIONINFO</value>
                             </list>
                         </property>
                     </bean>

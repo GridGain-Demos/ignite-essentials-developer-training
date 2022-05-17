@@ -154,8 +154,8 @@ CREATE TABLE Track
     Milliseconds INT,
     Bytes INT,
     UnitPrice DECIMAL(10,2),
-    PRIMARY KEY (TrackId)
-) WITH "template=partitioned, backups=1, CACHE_NAME=Track,
+    PRIMARY KEY (TrackId, ArtistId)
+) WITH "template=partitioned, backups=1, CACHE_NAME=Track, affinityKey=ArtistId
         KEY_TYPE=training.model.TrackKey, VALUE_TYPE=training.model.Track";
 
 SET STREAMING ON;
