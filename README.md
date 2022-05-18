@@ -31,7 +31,7 @@ Now you need to create a Media Store schema and load the cluster with sample dat
 1. Open a terminal window and navigate to the root directory of this project.
 
 2. Build the core executable:
-   ```java
+   ```bash
    mvn clean package -P core
    ```
    
@@ -100,13 +100,15 @@ Run `training.ComputeApp` that uses Apache Ignite compute capabilities for a cal
 The compute task executes on every cluster node, iterates through local records and responds to the application that 
 merges partial results.
 
-1. Build an executable JAR with the applications' classes (or just start the app with IntelliJ IDEA or Eclipse):
+1. Update `src/main/resources/ignite-config.xml` with the username, password and hostname of your cluster
+
+2. Build an executable JAR with the applications' classes (or just start the app with IntelliJ IDEA or Eclipse):
     ```bash
     mvn clean package -P apps
     ```
-2. Deploy the resulting JAR file to Nebula (you'll need to upload it somewhere public on the internet, possibly an S3 bucket and use the "Deployment" tab in Nebula to load it onto the server nodes.)
+3. Deploy the resulting JAR file to Nebula (you'll need to upload it somewhere public on the internet, possibly an S3 bucket and use the "Deployment" tab in Nebula to load it onto the server nodes.)
 
-3. Run the app in the terminal:
+4. Run the app in the terminal:
     ```bash
     java -cp libs/apps.jar -DIGNITE_EVENT_DRIVEN_SERVICE_PROCESSOR_ENABLED=true training.ComputeApp
     ```
