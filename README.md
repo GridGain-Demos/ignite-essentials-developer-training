@@ -29,18 +29,23 @@ Start a two-node Ignite cluster in GridGain Nebula.
 Now you need to create a Media Store schema and load the cluster with sample data. Use SQLLine tool to achieve that:
 
 1. Open a terminal window and navigate to the root directory of this project.
+
+2. Build the core executable:
+   ```java
+   mvn clean package -P core
+   ```
    
-2. Assuming that you've already assembled the core executable JAR with all the dependencies, launch a SQLLine process:
+4. Assuming that you've already assembled the core executable JAR with all the dependencies, launch a SQLLine process:
     ```bash
     java -cp libs/core.jar sqlline.SqlLine
     ```
    
-3. Connect to the cluster:
+5. Connect to the cluster:
     ```bash
-    !connect jdbc:ignite:thin://127.0.0.1/ ignite ignite
+    !connect jdbc:ignite:thin://SERVER:10800?sslMode=require USERNAME PASSWORD
     ```
 
-4. Load the Media Store database:
+6. Load the Media Store database:
     ```bash
     !run config/media_store.sql
     ```
@@ -99,13 +104,13 @@ merges partial results.
     ```bash
     mvn clean package -P apps
     ```
-2. Deploy the resulting JAR file to Nebula
+2. Deploy the resulting JAR file to Nebula (you'll need to upload it somewhere public on the internet, possibly an S3 bucket and use the "Deployment" tab in Nebula to load it onto the server nodes.)
+
 3. Run the app in the terminal:
     ```bash
-    java -cp libs/apps.jar training.ComputeApp
+    java -cp libs/apps.jar -DIGNITE_EVENT_DRIVEN_SERVICE_PROCESSOR_ENABLED=true training.ComputeApp
     ```
-4. Check the logs of the `ServerStartup` processes (your Ignite server nodes) to see that the calculation
-was executed across the cluster.
+   (If it hangs, you probably missed or mis-typed the IGNITE_EVENT_DRIVEN_SERVICE_PROCESSOR_ENABLED bit.)
 
 Modify the computation logic: 
 
@@ -118,5 +123,5 @@ Modify the computation logic:
 3. Redeploy the JAR file
 4. Run the app again:
     ```bash
-    java -cp libs/apps.jar training.ComputeApp
+    java -cp libs/apps.jar -DIGNITE_EVENT_DRIVEN_SERVICE_PROCESSOR_ENABLED=true training.ComputeApp
     ```

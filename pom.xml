@@ -10,8 +10,8 @@
 
     <properties>
         <ignite.group>org.gridgain</ignite.group>
-        <ignite.version>8.8.18</ignite.version>
-        <control.center.version>8.8.18</control.center.version>
+        <ignite.version>8.8.16</ignite.version>
+        <control.center.version>8.8.16</control.center.version>
     </properties>
 
     <repositories>
@@ -25,6 +25,12 @@
         <dependency>
             <groupId>${ignite.group}</groupId>
             <artifactId>ignite-core</artifactId>
+            <version>${ignite.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${ignite.group}</groupId>
+            <artifactId>gridgain-core</artifactId>
             <version>${ignite.version}</version>
         </dependency>
 
