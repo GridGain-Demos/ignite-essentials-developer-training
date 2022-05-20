@@ -110,7 +110,7 @@ merges partial results.
 
 4. Run the app in the terminal:
     ```bash
-    java -cp libs/apps.jar -DIGNITE_EVENT_DRIVEN_SERVICE_PROCESSOR_ENABLED=true training.ComputeApp
+    java -cp libs/apps.jar:libs/core.jar -DIGNITE_EVENT_DRIVEN_SERVICE_PROCESSOR_ENABLED=true training.ComputeApp
     ```
    (If it hangs, you probably missed or mis-typed the IGNITE_EVENT_DRIVEN_SERVICE_PROCESSOR_ENABLED bit.)
 
@@ -125,5 +125,5 @@ Modify the computation logic:
 3. Redeploy the JAR file
 4. Run the app again:
     ```bash
-    java -cp libs/apps.jar -DIGNITE_EVENT_DRIVEN_SERVICE_PROCESSOR_ENABLED=true training.ComputeApp
+    java -cp libs/apps.jar:libs/core.jar -DIGNITE_EVENT_DRIVEN_SERVICE_PROCESSOR_ENABLED=true training.ComputeApp
     ```
