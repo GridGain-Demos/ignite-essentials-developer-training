@@ -30,8 +30,8 @@
         http://www.springframework.org/schema/util/spring-util.xsd">
 
     <bean id="User" class="org.apache.ignite.plugin.security.SecurityCredentials">
-        <constructor-arg value="USERNAME"/>
-        <constructor-arg value="PASSWORD"/>
+        <constructor-arg value="cluster-user"/>
+        <constructor-arg value="gridgain"/>
     </bean>
 
     <bean class="org.apache.ignite.configuration.IgniteConfiguration">
@@ -82,7 +82,7 @@
                         <property name="addresses">
                             <list>
                                 <!-- In distributed environment, replace with actual host IP address. -->
-                                <value>CONNECTIONINFO</value>
+                                <value>41646bcb-348d-4e60-ada9-1876a0414062.gridgain-nebula.com</value>
                             </list>
                         </property>
                     </bean>
