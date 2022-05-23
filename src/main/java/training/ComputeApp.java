@@ -43,12 +43,15 @@ import org.apache.ignite.resources.IgniteInstanceResource;
  */
 public class ComputeApp {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         Ignition.setClientMode(true);
 
         Ignite ignite = Ignition.start("ignite-config.xml");
 
         calculateTopPayingCustomers(ignite);
+
+        // wait for compute metrics to be picked up
+        Thread.sleep(5000);
 
         ignite.close();
     }
