@@ -105,6 +105,11 @@
                                     </excludes>
                                 </filter>
                             </filters>
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>org.gridgain:control-center-agent</exclude>
+                                </excludes>
+                            </artifactSet>
                             <outputFile>${project.basedir}/libs/core.jar</outputFile>
                         </configuration>
                     </plugin>
@@ -129,6 +134,11 @@
                         </executions>
                         <configuration>
                             <finalName>apps</finalName>
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>org.gridgain:gridgain-core</exclude>
+                                </excludes>
+                            </artifactSet>
                             <outputFile>${project.basedir}/libs/apps.jar</outputFile>
                         </configuration>
                     </plugin>
