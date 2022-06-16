@@ -5,7 +5,7 @@ Check [the complete schedule](https://www.gridgain.com/products/services/trainin
 
 ## Setting Up Environment
 
-* Java Developer Kit, version 8 or later
+* Java Developer Kit, version 8 or 11
 * Apache Maven 3.0 or later
 * Your favorite IDE, such as IntelliJ IDEA, or Eclipse, or a simple text editor.
 
