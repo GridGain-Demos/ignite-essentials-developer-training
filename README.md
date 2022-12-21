@@ -9,6 +9,10 @@ Check [the complete schedule](https://www.gridgain.com/products/services/trainin
 * Apache Maven 3.0 or later
 * Your favorite IDE, such as IntelliJ IDEA, or Eclipse, or a simple text editor.
 
+This project _will_ work with Java 17, but additional options need
+to be specified on the command-line. See the [Ignite documentation](https://ignite.apache.org/docs/latest/setup#running-ignite-with-java-11-or-later)
+for more details. The steps that follow assume Java 8 or 11.
+
 ## Clone The Project
 
 1. Clone the training project with Git or download it as an archive:
