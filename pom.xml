@@ -54,7 +54,7 @@
         <dependency>
             <groupId>org.gridgain</groupId>
             <artifactId>control-center-agent</artifactId>
-            <version>2.14.0.0</version>
+            <version>2.15.0.0</version>
         </dependency>
     </dependencies>
 
