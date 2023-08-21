@@ -9,7 +9,8 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <ignite.version>2.14.0</ignite.version>
+	    <ignite.version>2.15.0</ignite.version>
+	    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <repositories>
@@ -61,10 +62,10 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
+		<artifactId>maven-compiler-plugin</artifactId>
+		<version>3.11.0</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <release>8</release>
                 </configuration>
             </plugin>
         </plugins>
@@ -89,7 +90,7 @@
                         <configuration>
                             <filters>
                                 <filter>
-                                    <artifact>${groupId}:${artifactId}</artifact>
+                                    <artifact>${project.groupId}:${project.artifactId}</artifact>
                                     <excludes>
                                         <exclude>training/ComputeApp*</exclude>
                                         <exclude>training/KeyValueApp.class</exclude>
