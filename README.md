@@ -38,19 +38,19 @@ Start a two-node Ignite cluster:
 2. Use Maven to create a core executable JAR with all the dependencies (Note, build the JAR even if you plan to
 start the sample code with IntelliJ IDEA or Eclipse. The JAR is used by other tools throughout the class):
     ```bash
-    mvn clean package -P core
+    mvn clean compile -P core
     ```
    If you see build errors, it may be because a firewall or proxy server is blocking access to
 [GridGain's External Maven Repo](https://www.gridgainsystems.com/nexus/content/repositories/external) which is used
 to download the module that connects to GridGain Nebula.
 3. Start the first cluster node (or just start the app with IntelliJ IDEA or Eclipse):
     ```bash
-    java -cp libs/core.jar training.ServerStartup
+    mvn exec:java -P core
     ```
 
 4. Open another terminal window and start the second node:
     ```bash
-    java -cp libs/core.jar training.ServerStartup
+    mvn exec:java -P core
     ```
 
 Both nodes auto-discover each other and you'll have a two-nodes cluster ready for exercises.
@@ -71,7 +71,7 @@ records, to execute and optimize SQL queries, and to monitor the state of the cl
     [management.sh|bat script](https://www.gridgain.com/docs/control-center/latest/clusters#generating-a-token) of the 
     Ignite Agent distribution package, you just call it directly with this training to skip extra downloads): 
         ```bash
-        java -cp libs/core.jar org.gridgain.control.agent.commandline.ManagementCommandHandler --token
+        mvn exec:java -P management
         ```              
 
 4. [Register the cluster](https://www.gridgain.com/docs/control-center/latest/clusters#adding-clusters) with GridGain Nebula 
@@ -85,7 +85,7 @@ Now you need to create a Media Store schema and load the cluster with sample dat
    
 2. Assuming that you've already assembled the core executable JAR with all the dependencies, launch a SQLLine process:
     ```bash
-    java -cp libs/core.jar sqlline.SqlLine
+    mvn exec:java -P sqlline
     ```
    
 3. Connect to the cluster:
@@ -175,16 +175,16 @@ avoid the usage of the non-colocated joins:
        ```
     * Clean the metadata for the `Track` object:
         ```bash
-        java -cp libs/core.jar org.apache.ignite.internal.commandline.CommandHandler --meta remove --typeName training.model.Track
+        mvn exec:java -P meta-remove -Dexec.args="--meta remove --typeName training.model.Track"
         ```
     * Clean the metadata for the `TrackKey` object:
         ```bash
-        java -cp libs/core.jar org.apache.ignite.internal.commandline.CommandHandler --meta remove --typeName training.model.TrackKey
+        mvn exec:java -P meta-remove -Dexec.args="--meta remove --typeName training.model.TrackKey"
         ```          
 5. Recreate the table using the SQLLine tool:
     * Launch SQLine from a terminal window:
         ```bash
-        java -cp libs/core.jar sqlline.SqlLine
+        mvn exec:java -P sqlline
         ```
        
     * Connect to the cluster:
@@ -208,11 +208,11 @@ merges partial results.
 
 1. Build an executable JAR with the applications' classes (or just start the app with IntelliJ IDEA or Eclipse):
     ```bash
-    mvn clean package -P apps
+    mvn clean compile -P apps
     ```
 2. Run the app in the terminal:
     ```bash
-    java -cp libs/apps.jar training.ComputeApp
+    mvn exec:java -P apps
     ```
 3. Check the logs of the `ServerStartup` processes (your Ignite server nodes) to see that the calculation
 was executed across the cluster.
@@ -223,9 +223,9 @@ Modify the computation logic:
 
 2. Re-build an executable JAR with the applications' classes (or just start the app with IntelliJ IDEA or Eclipse):
     ```bash
-    mvn clean package -P apps
+    mvn clean compile -P apps
     ```
 3. Run the app again:
     ```bash
-    java -cp libs/apps.jar training.ComputeApp
+    mvn exec:java -P apps
     ```
