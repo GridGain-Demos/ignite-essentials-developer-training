@@ -17,10 +17,20 @@
 
 package training.model;
 
+import org.apache.ignite.catalog.annotations.Column;
+
 public class Artist {
+    @Column
     private String name;
 
+    public Artist() {
+    }
+
     public Artist(String name) {
+        this.name = name;
+    }
+
+    public void setName(String name) {
         this.name = name;
     }
 
