@@ -16,10 +16,32 @@
  */
 package training;
 
-import org.apache.ignite.Ignition;
+import org.apache.ignite.IgnitionManager;
+import org.apache.ignite.InitParameters;
+
+import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class ServerStartup {
-    public static void main(String[] args) {
-        Ignition.start("ignite-config.xml");
+    public static void main(String[] args) throws ExecutionException, InterruptedException, URISyntaxException {
+        var config = ServerStartup.class.getClassLoader().getResource("ignite-config.conf");
+        var igniteFuture = IgnitionManager.start(
+                "node1",
+                Path.of("/Users/stephen.darlington/Dropbox (GridGain Business)/Clients/Partner Training/ignite-essentials-developer-training/src/main/resources/ignite-config.conf"),
+//                Path.of(config.toURI()),
+                Path.of("ignite")
+        );
+        var initParameters = InitParameters.builder()
+                .destinationNodeName("node1")
+                .metaStorageNodeNames(List.of("node1"))
+                .clusterName("cluster")
+                .build();
+
+        IgnitionManager.init(initParameters);
+
+        var ignite = igniteFuture.get();
+
     }
 }

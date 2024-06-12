@@ -5,19 +5,12 @@ Check [the complete schedule](https://www.gridgain.com/products/services/trainin
 
 ## Setting Up Environment
 
-* Java Developer Kit, version 8 or 11
+* Java Developer Kit, version 11 or 17
 * Apache Maven 3.0 or later
 * Your favorite IDE, such as IntelliJ IDEA, or Eclipse, or a simple text editor.
 
-This project will also work with Java 17, but additional options need
-to be specified on the command-line. You can use the supplied arguments
-file like this:
-   ```bash
-    java @src/main/resources/j17.params -cp libs/core.jar training.ServerStartup
-   ```
-
 See the [Ignite documentation](https://ignite.apache.org/docs/latest/setup#running-ignite-with-java-11-or-later)
-for more details. The steps that follow assume Java 8 or 11.
+for more details. The steps that follow assume Java 11 or 17.
 
 ## Clone The Project
 
@@ -35,6 +28,15 @@ Start a two-node Ignite cluster:
 
 1. Open a terminal window and navigate to the root directory of this project.
 
+2. Start your nodes using Docker Compose:
+    ```bash
+   docker compose -f docker-compose.yml up
+   ```
+
+3. Initalise the cluster:
+    ```bash
+   docker run --rm --network ignite3_default -it gridgain/gridgain9:9.0.0-beta2 cli
+    ```
 2. Use Maven to create a core executable JAR with all the dependencies (Note, build the JAR even if you plan to
 start the sample code with IntelliJ IDEA or Eclipse. The JAR is used by other tools throughout the class):
     ```bash

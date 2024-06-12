@@ -17,22 +17,16 @@
 package training;
 
 import java.math.BigDecimal;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.TreeSet;
-import javax.cache.Cache;
+import java.util.*;
+
+import org.apache.ignite.client.IgniteClient;
+import org.apache.ignite.compute.ComputeJob;
+import org.apache.ignite.compute.DeploymentUnit;
+import org.apache.ignite.compute.JobExecutionContext;
+import org.apache.ignite.lang.Cursor;
+import org.apache.ignite.table.Tuple;
 import training.model.TopCustomer;
 import org.apache.ignite.Ignite;
-import org.apache.ignite.IgniteCache;
-import org.apache.ignite.Ignition;
-import org.apache.ignite.binary.BinaryObject;
-import org.apache.ignite.cache.CachePeekMode;
-import org.apache.ignite.cache.query.QueryCursor;
-import org.apache.ignite.cache.query.ScanQuery;
-import org.apache.ignite.cluster.ClusterGroup;
-import org.apache.ignite.lang.IgniteCallable;
-import org.apache.ignite.resources.IgniteInstanceResource;
 
 /**
  * The application uses Apache Ignite compute capabilities for a calculation of the top-5 paying customers. The compute
@@ -43,10 +37,11 @@ import org.apache.ignite.resources.IgniteInstanceResource;
  */
 public class ComputeApp {
 
-    public static void main(String[] args) throws InterruptedException {
-        Ignition.setClientMode(true);
-
-        try (Ignite ignite = Ignition.start("ignite-config.xml")) {
+    public static void main(String[] args) throws Exception {
+        try (var ignite = IgniteClient.builder()
+                .addresses("127.0.0.1:10800")
+                .build()
+        ) {
             calculateTopPayingCustomers(ignite);
 
             // wait for metrics to flush to Control Center
@@ -55,12 +50,12 @@ public class ComputeApp {
     }
 
     private static void calculateTopPayingCustomers(Ignite ignite) {
-        ClusterGroup serversGroup = ignite.cluster().forServers();
-
         int customersCount = 5;
 
-        Collection<TreeSet<TopCustomer>> results = ignite.compute(
-            serversGroup).broadcast(new TopPayingCustomersTask(customersCount));
+        // cluster unit deploy -up apps.jar -uv 1.0 essentials-compute
+        var nodes = new HashSet<>(ignite.clusterNodes());
+        var unit = new DeploymentUnit("essentialsCompute", "1.0.0");
+        Collection<TreeSet<TopCustomer>> results = ignite.compute().execute(nodes, List.of(unit), String.valueOf(TopPayingCustomersTask.class), customersCount);
 
         printTopPayingCustomers(results, customersCount);
     }
@@ -68,10 +63,8 @@ public class ComputeApp {
     /**
      * Task that is executed on every cluster node and calculates top-5 local paying customers stored on a node.
      */
-    private static class TopPayingCustomersTask implements IgniteCallable<TreeSet<TopCustomer>> {
-        @IgniteInstanceResource
-        private Ignite localNode;
-
+    private static class TopPayingCustomersTask implements ComputeJob<TreeSet<TopCustomer>> {
+        private Ignite ignite;
         private HashMap<Integer, BigDecimal> customerPurchases = new HashMap<>();
 
         int customersCount;
@@ -80,25 +73,21 @@ public class ComputeApp {
             this.customersCount = customersCount;
         }
 
-        public TreeSet<TopCustomer> call() throws Exception {
-            IgniteCache<BinaryObject, BinaryObject> invoiceLineCache = localNode.cache(
-                "InvoiceLine").withKeepBinary();
+        @Override
+        public TreeSet<TopCustomer> execute(JobExecutionContext context, Object... args) {
+            ignite = context.ignite();
+            var invoiceLineCache = ignite.tables().table("InvoiceLine").recordView();
 
-            ScanQuery scanQuery = new ScanQuery();
-            scanQuery.setLocal(true);
+            try (Cursor<Tuple> it = invoiceLineCache.query(null, null)) {
+                while (it.hasNext()) {
+                    var val = it.next();
 
-            QueryCursor<Cache.Entry<BinaryObject, BinaryObject>> cursor = invoiceLineCache.query(scanQuery);
+                    BigDecimal unitPrice = BigDecimal.valueOf(val.doubleValue("unitPrice")); // FIXME: what is  DECIMAL(10,2)?
+                    int quantity = val.intValue("quantity");
 
-
-            cursor.forEach(entry -> {
-                BinaryObject val = entry.getValue();
-                BinaryObject key = entry.getKey();
-
-                BigDecimal unitPrice = val.field("unitPrice");
-                int quantity = val.field("quantity");
-
-                processPurchase(key.field("customerId"), unitPrice.multiply(new BigDecimal(quantity)));
-            });
+                    processPurchase(val.intValue("customerId"), unitPrice.multiply(new BigDecimal(quantity)));
+                }
+            }
 
             return calculateTopCustomers();
         }
@@ -113,7 +102,7 @@ public class ComputeApp {
         }
 
         private TreeSet<TopCustomer> calculateTopCustomers() {
-            IgniteCache<Integer, BinaryObject> customersCache = localNode.cache("Customer").withKeepBinary();
+            var customersCache = ignite.tables().table("Customer").recordView();
 
             TreeSet<TopCustomer> sortedPurchases = new TreeSet<>();
 
@@ -135,12 +124,12 @@ public class ComputeApp {
                 TopCustomer customer = iterator.next();
 
                 // It's safe to use localPeek because invoices are co-located with customer data.
-                BinaryObject customerRecord = customersCache.localPeek(customer.getCustomerId(), CachePeekMode.PRIMARY);
+                var customerRecord = customersCache.get(null, Tuple.create().set("customerId", customer.getCustomerId()));
 
-                customer.setFullName(customerRecord.field("firstName") +
-                    " " + customerRecord.field("lastName"));
-                customer.setCity(customerRecord.field("city"));
-                customer.setCountry(customerRecord.field("country"));
+                customer.setFullName(customerRecord.stringValue("firstName") +
+                        " " + customerRecord.stringValue("lastName"));
+                customer.setCity(customerRecord.stringValue("city"));
+                customer.setCountry(customerRecord.stringValue("country"));
 
                 top.add(customer);
 

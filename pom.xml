@@ -9,10 +9,10 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
         <ignite.project>org.gridgain</ignite.project>
-	    <ignite.version>9.0.0-beta1</ignite.version>
+	    <ignite.version>9.0.0-beta2</ignite.version>
 	    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -53,9 +53,9 @@
 		<artifactId>maven-compiler-plugin</artifactId>
 		<version>3.11.0</version>
                 <configuration>
-                    <release>17</release>
-                    <source>17</source>
-                    <target>17</target>
+                    <release>11</release>
+                    <source>11</source>
+                    <target>11</target>
                 </configuration>
             </plugin>
         </plugins>
@@ -67,28 +67,14 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-shade-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>shade</goal>
-                                </goals>
-                            </execution>
-                        </executions>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.2.0</version>
                         <configuration>
-                            <filters>
-                                <filter>
-                                    <artifact>${project.groupId}:${project.artifactId}</artifact>
-                                    <excludes>
-                                        <exclude>training/ComputeApp*</exclude>
-                                        <exclude>training/KeyValueApp.class</exclude>
-                                        <exclude>training/model/*</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
-                            <outputFile>${project.basedir}/libs/core.jar</outputFile>
+                            <mainClass>training.ServerStartup</mainClass>
+                            <arguments>
+                                <argument>argument1</argument>
+                            </arguments>
                         </configuration>
                     </plugin>
                 </plugins>
