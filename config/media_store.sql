@@ -30,8 +30,8 @@ DROP TABLE IF EXISTS Playlist;
 DROP TABLE IF EXISTS PlaylistTrack;
 DROP TABLE IF EXISTS Track;
 
-CREATE ZONE IF NOT EXISTS Chinook ENGINE aimem WITH replicas=2;
-CREATE ZONE IF NOT EXISTS ChinookReplicated ENGINE aimem WITH replicas=25, partitions=25;
+CREATE ZONE IF NOT EXISTS Chinook WITH replicas=2, storage_profiles='default';
+CREATE ZONE IF NOT EXISTS ChinookReplicated WITH replicas=25, partitions=25, storage_profiles='default';
 
 CREATE TABLE Artist
 (
