@@ -19,9 +19,9 @@ name: ignite3
 
 x-ignite-def:
   &ignite-def
-  image: gridgain/gridgain9:9.0.0-beta1
+  image: gridgain/gridgain9:9.0.0
   volumes:
-    - ./cluster.conf:/opt/ignite/etc/ignite-config.conf
+    - ./cluster.conf:/opt/gridgain/etc/gridgain-config.conf
 
 services:
   node1:

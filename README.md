@@ -35,8 +35,11 @@ Start a two-node Ignite cluster:
 
 3. Initalise the cluster:
     ```bash
-   docker run --rm --network ignite3_default -it gridgain/gridgain9:9.0.0-beta2 cli
+   docker run -v ./gridgain-license.conf:/opt/gridgain/gridgain-license.conf --rm --network ignite3_default -it gridgain/gridgain9:9.0.0-beta2 cli
+   connect http://node1:10300
+   cluster init --name=docker --metastorage-group=node1,node2 --config-files=/opt/gridgain/gridgain-license.conf
     ```
+
 2. Use Maven to create a core executable JAR with all the dependencies (Note, build the JAR even if you plan to
 start the sample code with IntelliJ IDEA or Eclipse. The JAR is used by other tools throughout the class):
     ```bash

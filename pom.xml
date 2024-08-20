@@ -12,11 +12,16 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <ignite.project>org.gridgain</ignite.project>
-	    <ignite.version>9.0.0-beta2</ignite.version>
+	    <ignite.version>9.0.127-SNAPSHOT</ignite.version>
 	    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <repositories>
+        <repository>
+            <id>gridgain_snapshots</id>
+            <url>https://maven.gridgain.com/nexus/content/repositories/gridgain-snapshots/</url>
+        </repository>
+
         <repository>
             <id>GridGain External Repository</id>
             <url>https://www.gridgainsystems.com/nexus/content/repositories/external</url>
@@ -32,16 +37,6 @@
         <dependency>
             <groupId>${ignite.project}</groupId>
             <artifactId>ignite-client</artifactId>
-            <version>${ignite.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${ignite.project}</groupId>
-            <artifactId>ignite-api</artifactId>
-            <version>${ignite.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${ignite.project}</groupId>
-            <artifactId>ignite-runner</artifactId>
             <version>${ignite.version}</version>
         </dependency>
     </dependencies>

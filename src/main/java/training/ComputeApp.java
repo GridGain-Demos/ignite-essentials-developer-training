@@ -18,12 +18,15 @@ package training;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 import org.apache.ignite.client.IgniteClient;
 import org.apache.ignite.compute.ComputeJob;
 import org.apache.ignite.compute.DeploymentUnit;
+import org.apache.ignite.compute.JobDescriptor;
 import org.apache.ignite.compute.JobExecutionContext;
 import org.apache.ignite.lang.Cursor;
+import org.apache.ignite.network.ClusterNode;
 import org.apache.ignite.table.Tuple;
 import training.model.TopCustomer;
 import org.apache.ignite.Ignite;
@@ -55,7 +58,10 @@ public class ComputeApp {
         // cluster unit deploy -up apps.jar -uv 1.0 essentials-compute
         var nodes = new HashSet<>(ignite.clusterNodes());
         var unit = new DeploymentUnit("essentialsCompute", "1.0.0");
-        Collection<TreeSet<TopCustomer>> results = ignite.compute().execute(nodes, List.of(unit), String.valueOf(TopPayingCustomersTask.class), customersCount);
+        var job = JobDescriptor.builder("TopPayingCustomersTask")
+                .units(unit)
+                .build();
+        var results = ignite.compute().<TreeSet<TopCustomer>>executeBroadcast(nodes, job, customersCount);
 
         printTopPayingCustomers(results, customersCount);
     }
@@ -65,7 +71,7 @@ public class ComputeApp {
      */
     private static class TopPayingCustomersTask implements ComputeJob<TreeSet<TopCustomer>> {
         private Ignite ignite;
-        private HashMap<Integer, BigDecimal> customerPurchases = new HashMap<>();
+        private final HashMap<Integer, BigDecimal> customerPurchases = new HashMap<>();
 
         int customersCount;
 
@@ -74,22 +80,23 @@ public class ComputeApp {
         }
 
         @Override
-        public TreeSet<TopCustomer> execute(JobExecutionContext context, Object... args) {
+        public CompletableFuture<TreeSet<TopCustomer>> executeAsync(JobExecutionContext context, Object... args) {
             ignite = context.ignite();
             var invoiceLineCache = ignite.tables().table("InvoiceLine").recordView();
 
-            try (Cursor<Tuple> it = invoiceLineCache.query(null, null)) {
-                while (it.hasNext()) {
-                    var val = it.next();
+            var q = ignite.sql().createStatement("select customerid, quantity from invoiceline");
+                try (Cursor<Tuple> it = invoiceLineCache.query(null, null)) {
+                    while (it.hasNext()) {
+                        var val = it.next();
 
-                    BigDecimal unitPrice = BigDecimal.valueOf(val.doubleValue("unitPrice")); // FIXME: what is  DECIMAL(10,2)?
-                    int quantity = val.intValue("quantity");
+                        BigDecimal unitPrice = BigDecimal.valueOf(val.doubleValue("unitPrice")); // FIXME: what is  DECIMAL(10,2)?
+                        int quantity = val.intValue("quantity");
 
-                    processPurchase(val.intValue("customerId"), unitPrice.multiply(new BigDecimal(quantity)));
+                        processPurchase(val.intValue("customerId"), unitPrice.multiply(new BigDecimal(quantity)));
+                    }
                 }
-            }
 
-            return calculateTopCustomers();
+                return calculateTopCustomers();
         }
 
         private void processPurchase(int itemId, BigDecimal price) {
@@ -108,8 +115,8 @@ public class ComputeApp {
 
             TreeSet<TopCustomer> top = new TreeSet<>();
 
-            customerPurchases.entrySet().forEach(entry -> {
-                TopCustomer topCustomer = new TopCustomer(entry.getKey(), entry.getValue());
+            customerPurchases.forEach((key, value) -> {
+                TopCustomer topCustomer = new TopCustomer(key, value);
 
                 sortedPurchases.add(topCustomer);
             });
@@ -140,21 +147,20 @@ public class ComputeApp {
         }
     }
 
-    private static void printTopPayingCustomers(Collection<TreeSet<TopCustomer>> results, int customersCount) {
+    private static void printTopPayingCustomers(Map<ClusterNode, TreeSet<TopCustomer>> results, int customersCount) {
         System.out.println(">>> Top " + customersCount + " Paying Listeners Across All Cluster Nodes");
 
-        Iterator<TreeSet<TopCustomer>> iterator = results.iterator();
-
-        TreeSet<TopCustomer> firstSet = iterator.next();
-
-        while (iterator.hasNext())
-            firstSet.addAll(iterator.next());
+        TreeSet<TopCustomer> firstSet = new TreeSet<>();
+        for (var cs : results.values()) {
+            firstSet.addAll(cs);
+        }
 
         Iterator<TopCustomer> customerIterator = firstSet.descendingSet().iterator();
 
         int counter = 0;
 
-        while (customerIterator.hasNext() && counter++ < customersCount)
+        while (customerIterator.hasNext() && counter++ < customersCount) {
             System.out.println(customerIterator.next());
+        }
     }
 }
