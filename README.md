@@ -35,7 +35,7 @@ Start a two-node Ignite cluster:
 
 3. Initalise the cluster:
     ```bash
-   docker run -v ./gridgain-license.conf:/opt/gridgain/gridgain-license.conf --rm --network ignite3_default -it gridgain/gridgain9:9.0.0-beta2 cli
+   docker run -v ./gridgain-license.conf:/opt/gridgain/gridgain-license.conf --rm --network ignite3_default -it gridgain/gridgain9:9.0.3 cli
    connect http://node1:10300
    cluster init --name=docker --metastorage-group=node1,node2 --config-files=/opt/gridgain/gridgain-license.conf
     ```
