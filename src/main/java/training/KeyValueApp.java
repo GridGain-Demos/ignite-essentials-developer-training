@@ -17,16 +17,9 @@
 
 package training;
 
-import org.apache.ignite.cache.CacheStore;
-import org.apache.ignite.cache.CacheStoreSession;
 import org.apache.ignite.client.IgniteClient;
-import org.apache.ignite.table.Tuple;
 import training.model.Artist;
 import org.apache.ignite.Ignite;
-
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 
 /**
