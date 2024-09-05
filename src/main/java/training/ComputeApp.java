@@ -22,9 +22,9 @@ import java.util.concurrent.CompletableFuture;
 
 import org.apache.ignite.client.IgniteClient;
 import org.apache.ignite.compute.ComputeJob;
-import org.apache.ignite.compute.DeploymentUnit;
 import org.apache.ignite.compute.JobDescriptor;
 import org.apache.ignite.compute.JobExecutionContext;
+import org.apache.ignite.deployment.DeploymentUnit;
 import org.apache.ignite.lang.Cursor;
 import org.apache.ignite.network.ClusterNode;
 import org.apache.ignite.table.Tuple;
@@ -58,10 +58,10 @@ public class ComputeApp {
         // cluster unit deploy -up apps.jar -uv 1.0 essentials-compute
         var nodes = new HashSet<>(ignite.clusterNodes());
         var unit = new DeploymentUnit("essentialsCompute", "1.0.0");
-        var job = JobDescriptor.builder("TopPayingCustomersTask")
+        var job = JobDescriptor.<Object, TreeSet<TopCustomer>>builder("TopPayingCustomersTask")
                 .units(unit)
                 .build();
-        var results = ignite.compute().<TreeSet<TopCustomer>>executeBroadcast(nodes, job, customersCount);
+        var results = ignite.compute().<Object, TreeSet<TopCustomer>>executeBroadcast(nodes, job, customersCount);
 
         printTopPayingCustomers(results, customersCount);
     }
@@ -69,7 +69,7 @@ public class ComputeApp {
     /**
      * Task that is executed on every cluster node and calculates top-5 local paying customers stored on a node.
      */
-    private static class TopPayingCustomersTask implements ComputeJob<TreeSet<TopCustomer>> {
+    private static class TopPayingCustomersTask implements ComputeJob<Object, TreeSet<TopCustomer>> {
         private Ignite ignite;
         private final HashMap<Integer, BigDecimal> customerPurchases = new HashMap<>();
 
@@ -80,7 +80,7 @@ public class ComputeApp {
         }
 
         @Override
-        public CompletableFuture<TreeSet<TopCustomer>> executeAsync(JobExecutionContext context, Object... args) {
+        public CompletableFuture<TreeSet<TopCustomer>> executeAsync(JobExecutionContext context, Object args) {
             ignite = context.ignite();
             var invoiceLineCache = ignite.tables().table("InvoiceLine").recordView();
 
