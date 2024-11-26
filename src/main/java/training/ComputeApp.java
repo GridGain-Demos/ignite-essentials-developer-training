@@ -19,16 +19,18 @@ package training;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import org.apache.ignite.client.IgniteClient;
 import org.apache.ignite.compute.ComputeJob;
 import org.apache.ignite.compute.JobDescriptor;
 import org.apache.ignite.compute.JobExecutionContext;
+import org.apache.ignite.compute.TaskDescriptor;
+import org.apache.ignite.compute.task.MapReduceJob;
+import org.apache.ignite.compute.task.MapReduceTask;
+import org.apache.ignite.compute.task.TaskExecutionContext;
 import org.apache.ignite.deployment.DeploymentUnit;
-import org.apache.ignite.lang.Cursor;
-import org.apache.ignite.network.ClusterNode;
 import org.apache.ignite.table.Tuple;
-import training.model.TopCustomer;
 import org.apache.ignite.Ignite;
 
 /**
@@ -52,16 +54,16 @@ public class ComputeApp {
         }
     }
 
+    private static DeploymentUnit deploymentUnit = new DeploymentUnit("essentialsCompute", "1.0.0");
+
     private static void calculateTopPayingCustomers(Ignite ignite) {
         int customersCount = 5;
 
         // cluster unit deploy -up apps.jar -uv 1.0 essentials-compute
-        var nodes = new HashSet<>(ignite.clusterNodes());
-        var unit = new DeploymentUnit("essentialsCompute", "1.0.0");
-        var job = JobDescriptor.<Object, TreeSet<TopCustomer>>builder("TopPayingCustomersTask")
-                .units(unit)
+        var job = TaskDescriptor.builder(TopPayingCustomersTask.class)
+                .units(deploymentUnit)
                 .build();
-        var results = ignite.compute().<Object, TreeSet<TopCustomer>>executeBroadcast(nodes, job, customersCount);
+        var results = ignite.compute().executeMapReduce(job, customersCount);
 
         printTopPayingCustomers(results, customersCount);
     }
@@ -69,98 +71,115 @@ public class ComputeApp {
     /**
      * Task that is executed on every cluster node and calculates top-5 local paying customers stored on a node.
      */
-    private static class TopPayingCustomersTask implements ComputeJob<Object, TreeSet<TopCustomer>> {
-        private Ignite ignite;
-        private final HashMap<Integer, BigDecimal> customerPurchases = new HashMap<>();
+    private static class TopPayingCustomersTask implements MapReduceTask<Integer, Tuple, Tuple, Tuple> {
 
-        int customersCount;
-
-        public TopPayingCustomersTask(int customersCount) {
-            this.customersCount = customersCount;
+        public TopPayingCustomersTask() {
         }
 
+        private Integer customerCount;
+
         @Override
-        public CompletableFuture<TreeSet<TopCustomer>> executeAsync(JobExecutionContext context, Object args) {
-            ignite = context.ignite();
-            var invoiceLineCache = ignite.tables().table("InvoiceLine").recordView();
+        public CompletableFuture<List<MapReduceJob<Tuple, Tuple>>> splitAsync(TaskExecutionContext taskExecutionContext, Integer customersCount) {
+            this.customerCount = customersCount;
+            return taskExecutionContext.ignite().tables().table("InvoiceLine").partitionManager().primaryReplicasAsync()
+                    .thenApply(x -> x.entrySet().stream()
+                            .map(jobParameter ->
+                                    MapReduceJob.<Tuple,Tuple>builder()
+                                            .nodes(List.of(jobParameter.getValue()))
+                                            .args(Tuple.create()
+                                                    // FIXME: don't use hashCode once API is finalised
+                                                    .set("partition",jobParameter.getKey().hashCode())
+                                                    .set("count", customersCount))
+                                            .jobDescriptor(
+                                                    JobDescriptor.builder(TopPayingCustomersJob.class)
+                                                            .units(deploymentUnit)
+                                                            .build()
+                                            )
+                                            .build())
+                            .collect(Collectors.toList())
+                    );
+        }
 
-            var q = ignite.sql().createStatement("select customerid, quantity from invoiceline");
-                try (Cursor<Tuple> it = invoiceLineCache.query(null, null)) {
-                    while (it.hasNext()) {
-                        var val = it.next();
+        private static class TopPayingCustomersJob implements ComputeJob<Tuple, Tuple> {
+            private static String sql = "select customerid, quantity * unitprice as price from invoiceline where \"__part\" = ?";
 
-                        BigDecimal unitPrice = BigDecimal.valueOf(val.doubleValue("unitPrice")); // FIXME: what is  DECIMAL(10,2)?
-                        int quantity = val.intValue("quantity");
+            private int customerCount = 5;
 
-                        processPurchase(val.intValue("customerId"), unitPrice.multiply(new BigDecimal(quantity)));
+            @Override
+            public CompletableFuture<Tuple> executeAsync(JobExecutionContext jobExecutionContext, Tuple objects) {
+                final HashMap<Integer, BigDecimal> customerPurchases = new HashMap<>();
+
+                customerCount = objects.intValue("count");
+
+                try (var results = jobExecutionContext.ignite().sql().execute(null, sql, objects.intValue("partition"))) {
+                    while (results.hasNext()) {
+                        var row = results.next();
+                        customerPurchases.merge(row.intValue("customerId"), row.value("price"), BigDecimal::add);
                     }
                 }
 
-                return calculateTopCustomers();
+                var r = new ArrayList<>(customerPurchases.entrySet());
+                r.sort(Map.Entry.comparingByValue());
+                Collections.reverse(r);
+
+                var results = Tuple.create();
+                for (var p = 0; p < r.size(); p++) {
+                    results.set(r.get(p).getKey().toString(), r.get(p).getValue());
+                }
+                return CompletableFuture.completedFuture(results);
+            }
         }
 
-        private void processPurchase(int itemId, BigDecimal price) {
-            BigDecimal totalPrice = customerPurchases.get(itemId);
+        @Override
+        public CompletableFuture<Tuple> reduceAsync(TaskExecutionContext taskExecutionContext, Map<UUID, Tuple> map) {
+            var r = new HashMap<Integer,BigDecimal>();
+            for (var result : map.values()) {
+                for (var e = 0; e < result.columnCount(); e++) {
+                    var customerId = result.columnName(e).replaceAll("\"", "");
+                    var count = result.<BigDecimal>value(customerId);
+                    r.put(Integer.valueOf(customerId), count);
+                }
+            }
+            var orderedResults = new ArrayList<>(r.entrySet());
+            orderedResults.sort(Map.Entry.comparingByValue());
+            Collections.reverse(orderedResults);
 
-            if (totalPrice == null)
-                customerPurchases.put(itemId, price);
-            else
-                customerPurchases.put(itemId, totalPrice.add(price));
-        }
-
-        private TreeSet<TopCustomer> calculateTopCustomers() {
-            var customersCache = ignite.tables().table("Customer").recordView();
-
-            TreeSet<TopCustomer> sortedPurchases = new TreeSet<>();
-
-            TreeSet<TopCustomer> top = new TreeSet<>();
-
-            customerPurchases.forEach((key, value) -> {
-                TopCustomer topCustomer = new TopCustomer(key, value);
-
-                sortedPurchases.add(topCustomer);
-            });
-
-            Iterator<TopCustomer> iterator = sortedPurchases.descendingSet().iterator();
-
-            int counter = 0;
-
-            System.out.println(">>> Top " + customersCount + " Paying Listeners: ");
-
-            while (iterator.hasNext() && counter++ < customersCount) {
-                TopCustomer customer = iterator.next();
-
-                // It's safe to use localPeek because invoices are co-located with customer data.
-                var customerRecord = customersCache.get(null, Tuple.create().set("customerId", customer.getCustomerId()));
-
-                customer.setFullName(customerRecord.stringValue("firstName") +
-                        " " + customerRecord.stringValue("lastName"));
-                customer.setCity(customerRecord.stringValue("city"));
-                customer.setCountry(customerRecord.stringValue("country"));
-
-                top.add(customer);
-
-                System.out.println(customer);
+            var topN = Tuple.create();
+            for (var i = 0; i < orderedResults.size() && i < customerCount; i++) {
+                topN.set(orderedResults.get(i).getKey().toString(), orderedResults.get(i).getValue());
             }
 
-            return top;
+            var customersCache = taskExecutionContext.ignite().tables().table("Customer").recordView();
+            var results = Tuple.create();
+            for (var p = 0; p < orderedResults.size() && p < customerCount; p++) {
+                var key = orderedResults.get(p).getKey();
+
+                var customerRecord = customersCache.get(null, Tuple.create().set("customerId", key));
+
+                String customer;
+                if (customerRecord != null) {
+                    customer = customerRecord.stringValue("firstName") + " " +
+                            customerRecord.stringValue("lastName") + " / " +
+                            customerRecord.stringValue("city") + " / " +
+                            customerRecord.stringValue("country");
+                }
+                else {
+                    customer = key.toString();
+                }
+
+                results.set(String.valueOf(key), orderedResults.get(p).getValue());
+            }
+            return CompletableFuture.completedFuture(topN);
         }
     }
 
-    private static void printTopPayingCustomers(Map<ClusterNode, TreeSet<TopCustomer>> results, int customersCount) {
+    private static void printTopPayingCustomers(Tuple results, int customersCount) {
         System.out.println(">>> Top " + customersCount + " Paying Listeners Across All Cluster Nodes");
 
-        TreeSet<TopCustomer> firstSet = new TreeSet<>();
-        for (var cs : results.values()) {
-            firstSet.addAll(cs);
-        }
+        var hashResults = TupleHelper.tupleToHashMap(results);
 
-        Iterator<TopCustomer> customerIterator = firstSet.descendingSet().iterator();
-
-        int counter = 0;
-
-        while (customerIterator.hasNext() && counter++ < customersCount) {
-            System.out.println(customerIterator.next());
+        for (var i = 0; i < results.columnCount(); i++) {
+            System.out.println(results.columnName(i) + " / " + results.value(i));
         }
     }
 }
