@@ -16,9 +16,10 @@
  */
 package training.model;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
-public class TopCustomer implements Comparable<TopCustomer>{
+public class TopCustomer implements Serializable, Comparable<TopCustomer>{
     private int customerId;
 
     private String fullName;

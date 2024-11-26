@@ -30,8 +30,11 @@ import org.apache.ignite.compute.task.MapReduceJob;
 import org.apache.ignite.compute.task.MapReduceTask;
 import org.apache.ignite.compute.task.TaskExecutionContext;
 import org.apache.ignite.deployment.DeploymentUnit;
+import org.apache.ignite.marshalling.ByteArrayMarshaller;
+import org.apache.ignite.marshalling.Marshaller;
 import org.apache.ignite.table.Tuple;
 import org.apache.ignite.Ignite;
+import training.model.TopCustomer;
 
 /**
  * The application uses Apache Ignite compute capabilities for a calculation of the top-5 paying customers. The compute
@@ -62,21 +65,26 @@ public class ComputeApp {
         // cluster unit deploy -up apps.jar -uv 1.0 essentials-compute
         var job = TaskDescriptor.builder(TopPayingCustomersTask.class)
                 .units(deploymentUnit)
+                .reduceJobResultMarshaller(ByteArrayMarshaller.create())
                 .build();
         var results = ignite.compute().executeMapReduce(job, customersCount);
-
-        printTopPayingCustomers(results, customersCount);
+        printTopPayingCustomers(List.of(results), customersCount);
     }
 
     /**
      * Task that is executed on every cluster node and calculates top-5 local paying customers stored on a node.
      */
-    private static class TopPayingCustomersTask implements MapReduceTask<Integer, Tuple, Tuple, Tuple> {
+    private static class TopPayingCustomersTask implements MapReduceTask<Integer, Tuple, Tuple, TopCustomer[]> {
 
         public TopPayingCustomersTask() {
         }
 
         private Integer customerCount;
+
+        @Override
+        public Marshaller<TopCustomer[], byte[]> reduceJobResultMarshaller() {
+            return ByteArrayMarshaller.create();
+        }
 
         @Override
         public CompletableFuture<List<MapReduceJob<Tuple, Tuple>>> splitAsync(TaskExecutionContext taskExecutionContext, Integer customersCount) {
@@ -132,7 +140,7 @@ public class ComputeApp {
         }
 
         @Override
-        public CompletableFuture<Tuple> reduceAsync(TaskExecutionContext taskExecutionContext, Map<UUID, Tuple> map) {
+        public CompletableFuture<TopCustomer[]> reduceAsync(TaskExecutionContext taskExecutionContext, Map<UUID, Tuple> map) {
             var r = new HashMap<Integer,BigDecimal>();
             for (var result : map.values()) {
                 for (var e = 0; e < result.columnCount(); e++) {
@@ -146,13 +154,8 @@ public class ComputeApp {
             orderedResults.sort(Map.Entry.comparingByValue());
             Collections.reverse(orderedResults);
 
-            var topN = Tuple.create();
-            for (var i = 0; i < orderedResults.size() && i < customerCount; i++) {
-                topN.set(orderedResults.get(i).getKey().toString(), orderedResults.get(i).getValue());
-            }
-
             var customersCache = taskExecutionContext.ignite().tables().table("Customer").recordView();
-            var results = Tuple.create();
+            var results = new ArrayList<TopCustomer>();
             for (var p = 0; p < orderedResults.size() && p < customerCount; p++) {
                 var newRecord = Tuple.create();
 
@@ -174,17 +177,21 @@ public class ComputeApp {
                 }
                 newRecord.set("price", orderedResults.get(p).getValue());
 
-                results.set(String.valueOf(p), newRecord);
+                var val = new TopCustomer(key, orderedResults.get(p).getValue());
+                val.setFullName(customerRecord.stringValue("firstName") + " " + customerRecord.stringValue("lastName"));
+                val.setCity(customerRecord.stringValue("city"));
+                val.setCountry(customerRecord.stringValue("country"));
+                results.add(val);
             }
-            return CompletableFuture.completedFuture(results);
+            return CompletableFuture.completedFuture(results.toArray(new TopCustomer[customerCount]));
         }
     }
 
-    private static void printTopPayingCustomers(Tuple results, int customersCount) {
+    private static void printTopPayingCustomers(List<TopCustomer> results, int customersCount) {
         System.out.println(">>> Top " + customersCount + " Paying Listeners Across All Cluster Nodes");
 
-        for (var i = 0; i < results.columnCount(); i++) {
-            System.out.println(results.columnName(i) + " / " + results.value(i));
+        for (var i : results) {
+            System.out.println(i);
         }
     }
 }
