@@ -54,7 +54,7 @@ public class ComputeApp {
         }
     }
 
-    private static DeploymentUnit deploymentUnit = new DeploymentUnit("essentialsCompute", "1.0.0");
+    private static final DeploymentUnit deploymentUnit = new DeploymentUnit("essentialsCompute", "1.0.0");
 
     private static void calculateTopPayingCustomers(Ignite ignite) {
         int customersCount = 5;
@@ -101,17 +101,18 @@ public class ComputeApp {
         }
 
         private static class TopPayingCustomersJob implements ComputeJob<Tuple, Tuple> {
+            // Verify results with: select customerid, sum(quantity * unitprice) as price from invoiceline group by customerid order by price desc limit 5
             private static String sql = "select customerid, quantity * unitprice as price from invoiceline where \"__part\" = ?";
 
             private int customerCount = 5;
 
             @Override
-            public CompletableFuture<Tuple> executeAsync(JobExecutionContext jobExecutionContext, Tuple objects) {
+            public CompletableFuture<Tuple> executeAsync(JobExecutionContext jobExecutionContext, Tuple parameters) {
                 final HashMap<Integer, BigDecimal> customerPurchases = new HashMap<>();
 
-                customerCount = objects.intValue("count");
+                customerCount = parameters.intValue("count");
 
-                try (var results = jobExecutionContext.ignite().sql().execute(null, sql, objects.intValue("partition"))) {
+                try (var results = jobExecutionContext.ignite().sql().execute(null, sql, parameters.intValue("partition"))) {
                     while (results.hasNext()) {
                         var row = results.next();
                         customerPurchases.merge(row.intValue("customerId"), row.value("price"), BigDecimal::add);
@@ -123,7 +124,7 @@ public class ComputeApp {
                 Collections.reverse(r);
 
                 var results = Tuple.create();
-                for (var p = 0; p < r.size(); p++) {
+                for (var p = 0; p < r.size() && p < customerCount; p++) {
                     results.set(r.get(p).getKey().toString(), r.get(p).getValue());
                 }
                 return CompletableFuture.completedFuture(results);
@@ -135,9 +136,10 @@ public class ComputeApp {
             var r = new HashMap<Integer,BigDecimal>();
             for (var result : map.values()) {
                 for (var e = 0; e < result.columnCount(); e++) {
+                    // FIXME: where do the quotes come from?
                     var customerId = result.columnName(e).replaceAll("\"", "");
-                    var count = result.<BigDecimal>value(customerId);
-                    r.put(Integer.valueOf(customerId), count);
+                    var price = result.<BigDecimal>value(customerId);
+                    r.put(Integer.valueOf(customerId), price);
                 }
             }
             var orderedResults = new ArrayList<>(r.entrySet());
@@ -152,31 +154,34 @@ public class ComputeApp {
             var customersCache = taskExecutionContext.ignite().tables().table("Customer").recordView();
             var results = Tuple.create();
             for (var p = 0; p < orderedResults.size() && p < customerCount; p++) {
+                var newRecord = Tuple.create();
+
                 var key = orderedResults.get(p).getKey();
 
                 var customerRecord = customersCache.get(null, Tuple.create().set("customerId", key));
 
-                String customer;
                 if (customerRecord != null) {
-                    customer = customerRecord.stringValue("firstName") + " " +
-                            customerRecord.stringValue("lastName") + " / " +
-                            customerRecord.stringValue("city") + " / " +
-                            customerRecord.stringValue("country");
+                    newRecord.set("firstName",customerRecord.stringValue("firstName"))
+                            .set("lastName", customerRecord.stringValue("lastName"))
+                            .set("city", customerRecord.stringValue("city"))
+                            .set("country", customerRecord.stringValue("country"));
                 }
                 else {
-                    customer = key.toString();
+                    newRecord.set("firstName", "unknown")
+                            .set("lastName", "unknown")
+                            .set("city", "unknown")
+                            .set("country", "unknown");
                 }
+                newRecord.set("price", orderedResults.get(p).getValue());
 
-                results.set(String.valueOf(key), orderedResults.get(p).getValue());
+                results.set(String.valueOf(p), newRecord);
             }
-            return CompletableFuture.completedFuture(topN);
+            return CompletableFuture.completedFuture(results);
         }
     }
 
     private static void printTopPayingCustomers(Tuple results, int customersCount) {
         System.out.println(">>> Top " + customersCount + " Paying Listeners Across All Cluster Nodes");
-
-        var hashResults = TupleHelper.tupleToHashMap(results);
 
         for (var i = 0; i < results.columnCount(); i++) {
             System.out.println(results.columnName(i) + " / " + results.value(i));
