@@ -19,7 +19,7 @@ name: ignite3
 
 x-ignite-def:
   &ignite-def
-  image: gridgain/gridgain9:9.0.3
+  image: gridgain/gridgain9:9.0.9
   volumes:
     - ./cluster.conf:/opt/gridgain/etc/gridgain-config.conf
 
@@ -36,9 +36,10 @@ services:
     ports:
       - 10301:10300
       - 10801:10800
-  node3:
-    << : *ignite-def
-    command: --node-name node3
-    ports:
-      - 10302:10300
-      - 10802:10800
+#  node3:
+#    << : *ignite-def
+#    command: --node-name node3
+#    ports:
+#      - 10302:10300
+#      - 10802:10800
+
