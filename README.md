@@ -7,6 +7,7 @@ Check [the complete schedule](https://www.gridgain.com/products/services/trainin
 
 * Java Developer Kit, version 11 or 17
 * Apache Maven 3.0 or later
+* Docker
 * Your favorite IDE, such as IntelliJ IDEA, or Eclipse, or a simple text editor.
 
 See the [Ignite documentation](https://ignite.apache.org/docs/latest/setup#running-ignite-with-java-11-or-later)
@@ -33,74 +34,23 @@ Start a two-node Ignite cluster:
    docker compose -f docker-compose.yml up
    ```
 
-3. Initalise the cluster:
+3. Initialise the cluster:
     ```bash
-   docker run -v ./gridgain-license.conf:/opt/gridgain/gridgain-license.conf --rm --network ignite3_default -it gridgain/gridgain9:9.0.3 cli
+   docker run -v ./config/media_store.sql:/opt/gridgain/config/media_store.sql -v ./gridgain-license.conf:/opt/gridgain/gridgain-license.conf --rm --network ignite3_default -it gridgain/gridgain9:9.0.9 cli
    connect http://node1:10300
    cluster init --name=docker --metastorage-group=node1,node2 --config-files=/opt/gridgain/gridgain-license.conf
     ```
-
-2. Use Maven to create a core executable JAR with all the dependencies (Note, build the JAR even if you plan to
-start the sample code with IntelliJ IDEA or Eclipse. The JAR is used by other tools throughout the class):
-    ```bash
-    mvn clean package -P core
-    ```
-   If you see build errors, it may be because a firewall or proxy server is blocking access to
-[GridGain's External Maven Repo](https://www.gridgainsystems.com/nexus/content/repositories/external) which is used
-to download the module that connects to GridGain Nebula.
-3. Start the first cluster node (or just start the app with IntelliJ IDEA or Eclipse):
-    ```bash
-    java -cp libs/core.jar training.ServerStartup
-    ```
-
-4. Open another terminal window and start the second node:
-    ```bash
-    java -cp libs/core.jar training.ServerStartup
-    ```
-
-Both nodes auto-discover each other and you'll have a two-nodes cluster ready for exercises.
  
-## Connecting to GridGain Nebula
-You use [GridGain Nebula](https://portal.gridgain.com) throughout the course to see how Ignite distributes 
-records, to execute and optimize SQL queries, and to monitor the state of the cluster.
-
-1. Go to [https://portal.gridgain.com](https://portal.gridgain.com).
-
-2. Create an account to sign in into GridGain Nebula.
-
-3. Just in case, generate a new token for the cluster (the default token expires in 5 minutes after the cluster startup time):
-
-    * Open a terminal window and navigate to the root directory of this project.
-    
-    * Generate the token (the `ManagementCommandHandler` is the tool used by the 
-    [management.sh|bat script](https://www.gridgain.com/docs/control-center/latest/clusters#generating-a-token) of the 
-    Ignite Agent distribution package, you just call it directly with this training to skip extra downloads): 
-        ```bash
-        java -cp libs/core.jar org.gridgain.control.agent.commandline.ManagementCommandHandler --token
-        ```              
-
-4. [Register the cluster](https://www.gridgain.com/docs/control-center/latest/clusters#adding-clusters) with GridGain Nebula 
-using the token.
-
 ## Creating Media Store Schema and Loading Data
 
 Now you need to create a Media Store schema and load the cluster with sample data. Use SQLLine tool to achieve that:
 
 1. Open a terminal window and navigate to the root directory of this project.
-   
-2. Assuming that you've already assembled the core executable JAR with all the dependencies, launch a SQLLine process:
+2. Load the media store database:
     ```bash
-    java -cp libs/core.jar sqlline.SqlLine
-    ```
-   
-3. Connect to the cluster:
-    ```bash
-    !connect jdbc:ignite:thin://127.0.0.1/ ignite ignite
-    ```
-
-4. Load the Media Store database:
-    ```bash
-    !run config/media_store.sql
+   docker run -v ./config/media_store.sql:/opt/gridgain/config/media_store.sql --rm --network ignite3_default -it gridgain/gridgain9:9.0.9 cli
+   connect http://node1:10300
+   sql --file=/opt/gridgain/config/media_store.sql
     ```
 
 Keep the connection open as you'll use it for following exercises.
@@ -109,8 +59,14 @@ Keep the connection open as you'll use it for following exercises.
 
 With the Media Store database loaded, you can check how Ignite distributed the records within the cluster:
 
-1. Open the [Caches Screen](https://www.gridgain.com/docs/control-center/latest/caches#partition-distribution) of 
-GridGain Nebula.
+1. Open a SQL prompt:
+    ```bash
+   docker run --rm --network ignite3_default -it gridgain/gridgain9:9.0.9 cli
+   connect http://node1:10300
+   sql
+   select * from system.local_partition_states where table_name = 'INVOICE';
+   select "__part", count(1) from invoice group by "__part";
+    ```
 
 2. While on that screen, follow the instructor to learn some insights.
 
@@ -147,12 +103,11 @@ JOIN with the `Artist` table:
    GROUP BY track.trackId, track.name, genre.name, artist.name ORDER BY duration DESC LIMIT 20;
    ```
 
-    Once you run the query, you'll see that the `artist` column is blank for some records. That's because `Track` and 
-    `Artist` tables are not co-located and the nodes don't have all data available locally during the join phase.
-    
-2. Allow the non-colocated joins by enabling the `Allow non-colocated joins` checkbox on the GridGain Nebula screen.
-
-3. Run the query again to see a complete and correct result.
+2. Try adding the phrase "EXPLAIN PLAN FOR" at the beginning of the above query to see how Ignite will execute it.
+3. Keep a record of the first line. It will look somethig like this:
+```bash
+Limit(fetch=[20]): rowcount = 20.0, cumulative cost = IgniteCost [rowCount=15318.06, cpu=77499.96615043783, memory=33461.76, io=178134.0, network=101068.0], id = 35293  
+```
 
 ### Joining Two Co-located Tables
 
@@ -164,46 +119,24 @@ avoid the usage of the non-colocated joins:
 
 2. Replace `PRIMARY KEY (TrackId)` with `PRIMARY KEY (TrackId, ArtistId)`.
 
-3. Co-locate Tracks with Artist by adding `affinityKey=ArtistId` to the parameters list of the `WITH ...` operator.
+3. Co-locate Tracks with Artist by adding `colocate by (ArtistId)` to the parameters list before the `PRIMARY ZONE` phrase.
+4. Reload the schema:
+    ```bash
+   docker run -v ./config/media_store.sql:/opt/gridgain/config/media_store.sql --rm --network ignite3_default -it gridgain/gridgain9:9.0.9 cli
+   connect http://node1:10300
+   sql --file=/opt/gridgain/config/media_store.sql
+    ```
 
-4. As long as you changed the primary and affinity keys in runtime, you need to update the Ignite metadata before recreating the table:
-
-    * Open a terminal window and navigate to the root directory of this project.
-    
-    * Enable the experimental features (Mac and Linux):
-        ```bash
-        export IGNITE_ENABLE_EXPERIMENTAL_COMMAND=true
-        ```
-    * Enable the experimental features (Windows):
-        ```bash
-        set IGNITE_ENABLE_EXPERIMENTAL_COMMAND=true
-       ```
-    * Clean the metadata for the `Track` object:
-        ```bash
-        java -cp libs/core.jar org.apache.ignite.internal.commandline.CommandHandler --meta remove --typeName training.model.Track
-        ```
-    * Clean the metadata for the `TrackKey` object:
-        ```bash
-        java -cp libs/core.jar org.apache.ignite.internal.commandline.CommandHandler --meta remove --typeName training.model.TrackKey
-        ```          
-5. Recreate the table using the SQLLine tool:
-    * Launch SQLine from a terminal window:
-        ```bash
-        java -cp libs/core.jar sqlline.SqlLine
-        ```
-       
-    * Connect to the cluster:
-        ```bash
-        !connect jdbc:ignite:thin://127.0.0.1/ ignite ignite
-        ```
-    
-    * Load the Media Store database:
-        ```bash
-        !run config/media_store.sql
-        ```
-
-6. In GridGain Nebula, run that query once again and you'll see that all the `artist` columns are filled in because now 
-all the Tracks are stored together with their Artists on the same cluster node.
+5. Run the EXPLAIN PLAN again and see that the cost is lower with colocated data:
+     ```sql
+   EXPLAIN PLAN FOR SELECT track.trackId, track.name as track_name, genre.name as genre, artist.name as artist,
+   MAX(milliseconds / (1000 * 60)) as duration FROM track
+   LEFT JOIN artist ON track.artistId = artist.artistId
+   JOIN genre ON track.genreId = genre.genreId
+   WHERE track.genreId < 17
+   GROUP BY track.trackId, track.name, genre.name, artist.name ORDER BY duration DESC LIMIT 20;
+   ```
+6. Examine the output. Your instructor will give hints on what to look for.
 
 ## Running Co-located Compute Tasks
 
@@ -213,24 +146,12 @@ merges partial results.
 
 1. Build an executable JAR with the applications' classes (or just start the app with IntelliJ IDEA or Eclipse):
     ```bash
-    mvn clean package -P apps
+    mvn clean package 
     ```
-2. Run the app in the terminal:
+2. Load the code into your cluster:
     ```bash
-    java -cp libs/apps.jar training.ComputeApp
+   docker run -v ./target/ignite-essentials-developer-training-1.0-SNAPSHOT.jar:/opt/gridgain/config/ignite-essentials-developer-training-1.0-SNAPSHOT.jar --rm --network ignite3_default -it gridgain/gridgain9:9.0.9 cli
+   connect http://node1:10300
+   cluster unit deploy --version 1.0.0 --path=/opt/gridgain/config/ignite-essentials-developer-training-1.0-SNAPSHOT.jar essentialsCompute
     ```
-3. Check the logs of the `ServerStartup` processes (your Ignite server nodes) to see that the calculation
-was executed across the cluster.
-
-Modify the computation logic: 
-
-1. Update the logic to return top-10 paying customers.
-
-2. Re-build an executable JAR with the applications' classes (or just start the app with IntelliJ IDEA or Eclipse):
-    ```bash
-    mvn clean package -P apps
-    ```
-3. Run the app again:
-    ```bash
-    java -cp libs/apps.jar training.ComputeApp
-    ```
+3. Execute the `ComputeApp` program from your IDE. 
