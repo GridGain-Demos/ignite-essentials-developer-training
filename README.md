@@ -36,7 +36,7 @@ Start a two-node Ignite cluster:
 
 3. Initialise the cluster:
     ```bash
-   docker run -v ./config/media_store.sql:/opt/gridgain/config/media_store.sql -v ./gridgain-license.conf:/opt/gridgain/gridgain-license.conf --rm --network ignite3_default -it gridgain/gridgain9:9.0.9 cli
+   docker run -v ./config/media_store.sql:/opt/gridgain/config/media_store.sql -v ./gridgain-license.conf:/opt/gridgain/gridgain-license.conf --rm --network ignite3_default -it gridgain/gridgain9:9.0.12 cli
    connect http://node1:10300
    cluster init --name=docker --metastorage-group=node1,node2 --config-files=/opt/gridgain/gridgain-license.conf
     ```
@@ -150,7 +150,7 @@ merges partial results.
     ```
 2. Load the code into your cluster:
     ```bash
-   docker run -v ./target/ignite-essentials-developer-training-1.0-SNAPSHOT.jar:/opt/gridgain/config/ignite-essentials-developer-training-1.0-SNAPSHOT.jar --rm --network ignite3_default -it gridgain/gridgain9:9.0.9 cli
+   docker run -v ./target/ignite-essentials-developer-training-1.0-SNAPSHOT.jar:/opt/gridgain/config/ignite-essentials-developer-training-1.0-SNAPSHOT.jar --rm --network ignite3_default -it gridgain/gridgain9:9.0.12 cli
    connect http://node1:10300
    cluster unit deploy --version 1.0.0 --path=/opt/gridgain/config/ignite-essentials-developer-training-1.0-SNAPSHOT.jar essentialsCompute
     ```
