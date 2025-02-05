@@ -13,13 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-version: "3.9"
-
 name: ignite3
 
 x-ignite-def:
   &ignite-def
-  image: gridgain/gridgain9:9.0.12
+  image: gridgain/gridgain9:9.0.13
   volumes:
     - ./cluster.conf:/opt/gridgain/etc/gridgain-config.conf
 

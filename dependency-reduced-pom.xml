@@ -77,15 +77,11 @@
       <id>GridGain External Repository</id>
       <url>https://www.gridgainsystems.com/nexus/content/repositories/external</url>
     </repository>
-    <repository>
-      <id>gridgain_ea</id>
-      <url>https://gridgainsystems.com/nexus/content/repositories/external-ea/</url>
-    </repository>
   </repositories>
   <properties>
     <maven.compiler.target>11</maven.compiler.target>
     <maven.compiler.source>11</maven.compiler.source>
-    <ignite.version>9.0.0-beta2</ignite.version>
+    <ignite.version>9.0.13</ignite.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <ignite.project>org.gridgain</ignite.project>
   </properties>
