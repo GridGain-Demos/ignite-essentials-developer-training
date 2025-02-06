@@ -9,52 +9,18 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-	    <ignite.version>2.14.0</ignite.version>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <ignite.project>org.apache.ignite</ignite.project>
+	    <ignite.version>3.0.0</ignite.version>
 	    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <repositories>
-        <repository>
-            <id>GridGain External Repository</id>
-            <url>https://www.gridgainsystems.com/nexus/content/repositories/external</url>
-        </repository>
-    </repositories>
-
     <dependencies>
         <dependency>
-            <groupId>org.apache.ignite</groupId>
-            <artifactId>ignite-core</artifactId>
+            <groupId>${ignite.project}</groupId>
+            <artifactId>ignite-client</artifactId>
             <version>${ignite.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.ignite</groupId>
-            <artifactId>ignite-indexing</artifactId>
-            <version>${ignite.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.ignite</groupId>
-            <artifactId>ignite-spring</artifactId>
-            <version>${ignite.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.ignite</groupId>
-            <artifactId>ignite-control-utility</artifactId>
-            <version>${ignite.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>sqlline</groupId>
-            <artifactId>sqlline</artifactId>
-            <version>1.9.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.gridgain</groupId>
-            <artifactId>control-center-agent</artifactId>
-            <version>2.14.0.0</version>
         </dependency>
     </dependencies>
 
@@ -64,66 +30,12 @@
                 <groupId>org.apache.maven.plugins</groupId>
 		<artifactId>maven-compiler-plugin</artifactId>
 		<version>3.11.0</version>
+                <configuration>
+                    <release>11</release>
+                    <source>11</source>
+                    <target>11</target>
+                </configuration>
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>core</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-shade-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>shade</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <filters>
-                                <filter>
-                                    <artifact>${project.groupId}:${project.artifactId}</artifact>
-                                    <excludes>
-                                        <exclude>training/ComputeApp*</exclude>
-                                        <exclude>training/KeyValueApp.class</exclude>
-                                        <exclude>training/model/*</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
-                            <outputFile>${project.basedir}/libs/core.jar</outputFile>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <profile>
-            <id>apps</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-shade-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>shade</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <finalName>apps</finalName>
-                            <outputFile>${project.basedir}/libs/apps.jar</outputFile>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>

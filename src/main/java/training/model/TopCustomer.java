@@ -16,10 +16,10 @@
  */
 package training.model;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
-import org.jetbrains.annotations.NotNull;
 
-public class TopCustomer implements Comparable<TopCustomer>{
+public class TopCustomer implements Serializable, Comparable<TopCustomer>{
     private int customerId;
 
     private String fullName;
@@ -95,7 +95,7 @@ public class TopCustomer implements Comparable<TopCustomer>{
         return result;
     }
 
-    @Override public int compareTo(@NotNull TopCustomer customer) {
+    @Override public int compareTo(TopCustomer customer) {
         int result = totalPurchases.compareTo(customer.getTotalPurchases());
 
         if (result == 0)

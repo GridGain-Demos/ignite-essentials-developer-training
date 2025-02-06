@@ -17,10 +17,9 @@
 
 package training;
 
+import org.apache.ignite.client.IgniteClient;
 import training.model.Artist;
 import org.apache.ignite.Ignite;
-import org.apache.ignite.IgniteCache;
-import org.apache.ignite.Ignition;
 
 
 /**
@@ -29,22 +28,21 @@ import org.apache.ignite.Ignition;
  */
 public class KeyValueApp {
 
-    public static void main(String[] args) {
-        Ignition.setClientMode(true);
-
-        Ignite ignite = Ignition.start("ignite-config.xml");
-
-        getArtistsDistribution(ignite);
-
-        ignite.close();
+    public static void main(String[] args) throws Exception {
+        try (var ignite = IgniteClient.builder()
+                .addresses("127.0.0.1:10800")
+                .build()
+        ) {
+            getArtistsDistribution(ignite);
+        }
     }
 
     private static void getArtistsDistribution(Ignite ignite) {
 
-        IgniteCache<Integer, Artist> artistCache = ignite.cache("Artist");
+        var artistCache = ignite.tables().table("Artist").keyValueView(Integer.class, Artist.class);
 
         for (int artistKey = 1; artistKey < 100; artistKey++) {
-            Artist artist = artistCache.get(artistKey);
+            Artist artist = artistCache.get(null, artistKey);
 
             /**
              * TODO #1: print partitions and nodes every artistKey is mapped to.

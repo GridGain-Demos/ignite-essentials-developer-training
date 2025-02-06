@@ -16,12 +16,20 @@
  */
 package training.model;
 
-import org.apache.ignite.cache.affinity.AffinityKeyMapped;
+import org.apache.ignite.catalog.annotations.Column;
+import org.apache.ignite.catalog.annotations.ColumnRef;
+import org.apache.ignite.catalog.annotations.Id;
+import org.apache.ignite.catalog.annotations.Table;
 
+@Table(
+        colocateBy = @ColumnRef("CustomerId")
+)
 public class InvoiceLineKey {
+    @Column
+    @Id
     private int invoiceLineId;
 
-    @AffinityKeyMapped
+    @Column
     private int CUSTOMERID;
 
     public InvoiceLineKey(int invoiceLineId, int customerId) {
