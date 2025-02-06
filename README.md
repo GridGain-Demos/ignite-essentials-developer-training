@@ -78,7 +78,7 @@ going to run basic SQL operations as well as more advanced ones.
 
 1. Use the CLI to open a SQL prompt:
      ```bash
-   docker run -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -v ./config/media_store.sql:/opt/gridgain/config/media_store.sql --rm --network ignite3_default -it apacheignite/ignite:3.0.0 cli
+   docker run -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 --rm --network ignite3_default -it apacheignite/ignite:3.0.0 cli
    connect http://node1:10300
    sql
     ```
