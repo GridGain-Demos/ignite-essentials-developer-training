@@ -19,7 +19,7 @@ x-ignite-def:
   &ignite-def
   image: apacheignite/ignite:3.0.0
   volumes:
-    - ./src/main/java/resources/ignite-config.conf:/opt/ignite/etc/ignite-config.conf
+    - ./src/main/resources/ignite-config.conf:/opt/ignite/etc/ignite-config.conf
 
 services:
   node1:
