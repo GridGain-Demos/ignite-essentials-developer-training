@@ -33,9 +33,9 @@ Start a two-node Ignite cluster:
 
 3. Initialise the cluster:
     ```bash
-   docker run -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -v ./config/media_store.sql:/opt/gridgain/config/media_store.sql -v ./gridgain-license.conf:/opt/gridgain/gridgain-license.conf --rm --network ignite3_default -it gridgain/gridgain9:9.0.13 cli
+   docker run -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -v ./config/media_store.sql:/opt/ignite/downloads/media_store.sql --rm --network ignite3_default -it apacheignite/ignite:3.0.0 cli
    connect http://node1:10300
-   cluster init --name=docker --metastorage-group=node1,node2 --config-files=/opt/gridgain/gridgain-license.conf
+   cluster init --name=docker --metastorage-group=node1,node2 
     ```
  
 ## Creating Media Store Schema and Loading Data
@@ -45,9 +45,9 @@ Now you need to create a Media Store schema and load the cluster with sample dat
 1. Open a terminal window and navigate to the root directory of this project.
 2. Load the media store database:
     ```bash
-   docker run -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -v ./config/media_store.sql:/opt/gridgain/config/media_store.sql --rm --network ignite3_default -it gridgain/gridgain9:9.0.13 cli
+   docker run -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -v ./config/media_store.sql:/opt/ignite/downloads/media_store.sql --rm --network ignite3_default -it apacheignite/ignite:3.0.0 cli
    connect http://node1:10300
-   sql --file=/opt/gridgain/config/media_store.sql
+   sql --file=/opt/ignite/downloads/media_store.sql
     ```
 
 Keep the connection open as you'll use it for following exercises.
@@ -58,7 +58,7 @@ With the Media Store database loaded, you can check how Ignite distributed the r
 
 1. Open a SQL prompt:
     ```bash
-   docker run -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 --rm --network ignite3_default -it gridgain/gridgain9:9.0.13 cli
+   docker run -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 --rm --network ignite3_default -it apacheignite/ignite:3.0.0 cli
    connect http://node1:10300
    sql
    select * from system.local_partition_states where table_name = 'INVOICE';
@@ -78,7 +78,7 @@ going to run basic SQL operations as well as more advanced ones.
 
 1. Use the CLI to open a SQL prompt:
      ```bash
-   docker run -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -v ./config/media_store.sql:/opt/gridgain/config/media_store.sql --rm --network ignite3_default -it gridgain/gridgain9:9.0.13 cli
+   docker run -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -v ./config/media_store.sql:/opt/gridgain/config/media_store.sql --rm --network ignite3_default -it apacheignite/ignite:3.0.0 cli
    connect http://node1:10300
    sql
     ```
@@ -123,8 +123,8 @@ merges partial results.
     ```
 2. Load the code into your cluster:
     ```bash
-   docker run -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -v ./target/ignite-essentials-developer-training-1.0-SNAPSHOT.jar:/opt/gridgain/config/ignite-essentials-developer-training-1.0-SNAPSHOT.jar --rm --network ignite3_default -it gridgain/gridgain9:9.0.13 cli
+   docker run -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -v ./target/ignite-essentials-developer-training-1.0-SNAPSHOT.jar:/opt/ignite/downloads/ignite-essentials-developer-training-1.0-SNAPSHOT.jar --rm --network ignite3_default -it apacheignite/ignite:3.0.0 cli
    connect http://node1:10300
-   cluster unit deploy --version 1.0.0 --path=/opt/gridgain/config/ignite-essentials-developer-training-1.0-SNAPSHOT.jar essentialsCompute
+   cluster unit deploy --version 1.0.0 --path=/opt/ignite/downloads/ignite-essentials-developer-training-1.0-SNAPSHOT.jar essentialsCompute
     ```
 3. Execute the `ComputeApp` program from your IDE. 
