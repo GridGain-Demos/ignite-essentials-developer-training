@@ -18,8 +18,9 @@ name: ignite3
 x-ignite-def:
   &ignite-def
   image: apacheignite/ignite:3.0.0
-  volumes:
-    - ./src/main/resources/ignite-config.conf:/opt/ignite/etc/ignite-config.conf
+  configs:
+    - source: node_config
+      target: /opt/ignite/etc/ignite-config.conf
 
 services:
   node1:
@@ -40,4 +41,11 @@ services:
 #    ports:
 #      - 10302:10300
 #      - 10802:10800
+  cccc:
+    image: cccc:latest #gridgain/control-center-cloud-connector:1.0.0
+    volumes:
+      - ./src/main/resources/controlcenter.conf:/opt/gridgain-nebula-cloud-connector/application.properties
 
+configs:
+  node_config:
+    content: ignite.network { port = 3344, nodeFinder.netClusterNodes = ["node1:3344","node2:3344", "node3:3344"]}
