@@ -41,10 +41,6 @@ services:
 #    ports:
 #      - 10302:10300
 #      - 10802:10800
-  cccc:
-    image: cccc:latest #gridgain/control-center-cloud-connector:1.0.0
-    volumes:
-      - ./src/main/resources/controlcenter.conf:/opt/gridgain-nebula-cloud-connector/application.properties
 
 configs:
   node_config:
