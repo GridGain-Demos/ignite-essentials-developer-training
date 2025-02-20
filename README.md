@@ -127,4 +127,7 @@ merges partial results.
    connect http://node1:10300
    cluster unit deploy --version 1.0.0 --path=/opt/ignite/downloads/ignite-essentials-developer-training-1.0-SNAPSHOT.jar essentialsCompute
     ```
-3. Execute the `ComputeApp` program from your IDE. 
+3. Execute the `ComputeApp` program from your IDE or the deployable jar:
+    ```bash
+    java -jar target/ignite-essentials-developer-training-1.0-SNAPSHOT.jar 
+    ```
