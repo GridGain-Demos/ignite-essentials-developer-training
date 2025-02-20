@@ -40,4 +40,13 @@ services:
 #    ports:
 #      - 10302:10300
 #      - 10802:10800
+#  connector:
+#    image: gridgain/cloud-connector:latest
+#    ports:
+#      - 3200
+#    environment:
+#      CONNECTOR_BASE_URL: http://connector:3200
+#      CONNECTOR_USERNAME: <provide your Nebula username here>
+#      CONNECTOR_PASSWORD: <provide your Nebula password here>
+#      CONNECTOR_CC_URL: https://portal.gridgain.com/
 
