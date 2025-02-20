@@ -1,4 +1,4 @@
-package training;
+package org.gridgain.training;
 
 import org.apache.ignite.compute.ComputeJob;
 import org.apache.ignite.compute.JobExecutionContext;

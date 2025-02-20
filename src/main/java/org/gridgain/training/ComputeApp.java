@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package training;
+package org.gridgain.training;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -34,7 +34,7 @@ import org.apache.ignite.marshalling.ByteArrayMarshaller;
 import org.apache.ignite.marshalling.Marshaller;
 import org.apache.ignite.table.Tuple;
 import org.apache.ignite.Ignite;
-import training.model.TopCustomer;
+import org.gridgain.training.model.TopCustomer;
 
 /**
  * The application uses Apache Ignite compute capabilities for a calculation of the top-5 paying customers. The compute

@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>training</groupId>
+    <groupId>org.gridgain.training</groupId>
     <artifactId>ignite-essentials-developer-training</artifactId>
     <version>1.0-SNAPSHOT</version>
 
@@ -29,12 +29,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
-                <configuration>
-                    <release>11</release>
-                    <source>11</source>
-                    <target>11</target>
-                </configuration>
+                <version>3.13.0</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -43,9 +38,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>
-                                training.ComputeApp
-                            </mainClass>
+                            <mainClass>org.gridgain.training.ComputeApp</mainClass>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>libs/</classpathPrefix>
                         </manifest>

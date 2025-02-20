@@ -14,33 +14,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.gridgain.training.model;
 
-package training.model;
+import java.math.BigDecimal;
 
-import org.apache.ignite.catalog.annotations.Column;
+public class InvoiceLine {
+    private int invoiceId;
 
-public class Artist {
-    @Column
-    private String name;
+    private int trackId;
 
-    public Artist() {
+    private BigDecimal unitPrice;
+
+    private int quantity;
+
+    public InvoiceLine(int invoiceId, int trackId, BigDecimal unitPrice, int quantity) {
+        this.invoiceId = invoiceId;
+        this.trackId = trackId;
+        this.unitPrice = unitPrice;
+        this.quantity = quantity;
     }
 
-    public Artist(String name) {
-        this.name = name;
+    public int getInvoiceId() {
+        return invoiceId;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public int getTrackId() {
+        return trackId;
     }
 
-    public String getName() {
-        return name;
+    public BigDecimal getUnitPrice() {
+        return unitPrice;
     }
 
-    @Override public String toString() {
-        return "Artist{" +
-            "name='" + name + '\'' +
-            '}';
+    public int getQuantity() {
+        return quantity;
     }
 }
