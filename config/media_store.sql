@@ -210,7 +210,7 @@ INSERT INTO Artist (ArtistId, Name) VALUES (18, 'Chico Science & Nação Zumbi')
 INSERT INTO Artist (ArtistId, Name) VALUES (19, 'Cidade Negra');
 INSERT INTO Artist (ArtistId, Name) VALUES (20, 'Cláudio Zoli');
 INSERT INTO Artist (ArtistId, Name) VALUES (21, 'Various Artists');
-INSERT INTO Artist (ArtistId, Name) VALUES (22, 'Led Zeppeli');
+INSERT INTO Artist (ArtistId, Name) VALUES (22, 'Led Zeppelin');
 INSERT INTO Artist (ArtistId, Name) VALUES (23, 'Frank Zappa & Captain Beefheart');
 INSERT INTO Artist (ArtistId, Name) VALUES (24, 'Marcos Valle');
 INSERT INTO Artist (ArtistId, Name) VALUES (25, 'Milton Nascimento & Bebeto');
@@ -2478,7 +2478,7 @@ INSERT INTO Track (TrackId, Name, AlbumId, ArtistId, MediaTypeId, GenreId, Compo
 INSERT INTO Track (TrackId, Name, AlbumId, ArtistId, MediaTypeId, GenreId, Composer, Milliseconds, Bytes, UnitPrice) VALUES (1663, 'Celebration Day', 137, 22, 1, 1, 'John Paul Jones/Robert Plant', 230034, 7478487, 0.99);
 INSERT INTO Track (TrackId, Name, AlbumId, ArtistId, MediaTypeId, GenreId, Composer, Milliseconds, Bytes, UnitPrice) VALUES (1664, 'The Song Remains The Same', 137, 22, 1, 1, 'Robert Plant', 353358, 11465033, 0.99);
 INSERT INTO Track (TrackId, Name, AlbumId, ArtistId, MediaTypeId, GenreId, Composer, Milliseconds, Bytes, UnitPrice) VALUES (1665, 'Rain Song', 137, 22, 1, 1, 'Robert Plant', 505808, 16273705, 0.99);
-INSERT INTO Track (TrackId, Name, AlbumId, ArtistId, MediaTypeId, GenreId, Composer, Milliseconds, Bytes, UnitPrice) VALUES (1666, 'Dazed And Confused', 137, 22, 1, 1, 'Jimmy Page', 1612329, 52490554, 0.99);
+INSERT INTO Track (TrackId, Name, AlbumId, ArtistId, MediaTypeId, GenreId, Composer, Milliseconds, Bytes, UnitPrice) VALUES (1666, 'Dazed and Confused', 137, 22, 1, 1, 'Jimmy Page', 1612329, 52490554, 0.99);
 INSERT INTO Track (TrackId, Name, AlbumId, ArtistId, MediaTypeId, GenreId, Composer, Milliseconds, Bytes, UnitPrice) VALUES (1667, 'No Quarter', 138, 22, 1, 1, 'John Paul Jones/Robert Plant', 749897, 24399285, 0.99);
 INSERT INTO Track (TrackId, Name, AlbumId, ArtistId, MediaTypeId, GenreId, Composer, Milliseconds, Bytes, UnitPrice) VALUES (1668, 'Stairway To Heave', 138, 22, 1, 1, 'Robert Plant', 657293, 21354766, 0.99);
 INSERT INTO Track (TrackId, Name, AlbumId, ArtistId, MediaTypeId, GenreId, Composer, Milliseconds, Bytes, UnitPrice) VALUES (1669, 'Moby Dick', 138, 22, 1, 1, 'John Bonham/John Paul Jones', 766354, 25345841, 0.99);
