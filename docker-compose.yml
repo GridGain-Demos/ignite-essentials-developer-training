@@ -41,7 +41,19 @@ services:
 #    ports:
 #      - 10302:10300
 #      - 10802:10800
-
-configs:
-  node_config:
-    content: ignite.network { port = 3344, nodeFinder.netClusterNodes = ["node1:3344","node2:3344", "node3:3344"]}
+#  connector:
+#    image: gridgain/cloud-connector:latest
+#    networks:
+#      - default
+#    ports:
+#      - 3200:3200
+#    environment:
+#      CONNECTOR_BASE_URL: http://connector:3200
+#      CONNECTOR_NAME: IgniteSummit2025
+#      CONNECTOR_USERNAME: "YOUR_EMAIL@YOUR.DOM"
+#      CONNECTOR_PASSWORD: "YOUR_NEBULA_PASSWORD"
+#      CONNECTOR_CC_URL: https://portal.gridgain.com
+#    command: 
+#      - "/bin/sh"
+#      - "-c"
+#      - "export LOGGING_LEVEL_ROOT=DEBUG; env|grep LOG;./connector.sh"

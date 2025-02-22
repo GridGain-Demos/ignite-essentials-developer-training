@@ -15,7 +15,9 @@
  * limitations under the License.
  */
 
-package training.model;
+package org.gridgain.training.model;
+
+import org.apache.ignite.catalog.annotations.Column;
 
 import org.apache.ignite.catalog.annotations.Column;
 

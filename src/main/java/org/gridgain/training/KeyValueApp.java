@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-package training;
+package org.gridgain.training;
 
 import org.apache.ignite.client.IgniteClient;
-import training.model.Artist;
+import org.gridgain.training.model.Artist;
 import org.apache.ignite.Ignite;
 
 
