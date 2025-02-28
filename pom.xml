@@ -29,11 +29,20 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
 		<artifactId>maven-compiler-plugin</artifactId>
-		<version>3.11.0</version>
+		<version>3.14.0</version>
                 <configuration>
                     <release>11</release>
                     <source>11</source>
                     <target>11</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.0</version>
+                <configuration>
+                    <executable>java</executable>
+                    <mainClass>training.ComputeApp</mainClass>
                 </configuration>
             </plugin>
         </plugins>

@@ -154,4 +154,10 @@ merges partial results.
    ```bash
    cluster unit deploy --version 1.0.0 --path=/opt/ignite/downloads/ignite-essentials-developer-training-1.0-SNAPSHOT.jar essentialsCompute
     ```
-3. Execute the `ComputeApp` program from your IDE. 
+3. Execute the `ComputeApp` program with the following command:
+
+```shell
+mvn exec:java
+```
+
+Or run directly from your preferred IDE.
