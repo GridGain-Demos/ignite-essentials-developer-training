@@ -30,8 +30,11 @@ DROP TABLE IF EXISTS Playlist;
 DROP TABLE IF EXISTS PlaylistTrack;
 DROP TABLE IF EXISTS Track;
 
+DROP ZONE IF EXISTS Chinook;
+DROP ZONE IF EXISTS ChinookReplicated;
+
 CREATE ZONE IF NOT EXISTS Chinook WITH replicas=2, storage_profiles='default';
-CREATE ZONE IF NOT EXISTS ChinookReplicated WITH replicas=25, partitions=25, storage_profiles='default';
+CREATE ZONE IF NOT EXISTS ChinookReplicated WITH replicas=3, partitions=25, storage_profiles='default';
 
 CREATE TABLE Artist
 (
