@@ -10,9 +10,9 @@ name: Java CI with Maven
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "ignite2" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "ignite2" ]
 
 jobs:
   build-java8:
