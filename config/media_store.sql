@@ -41,7 +41,7 @@ CREATE TABLE Artist
     ArtistId INT,
     Name VARCHAR(120),
     PRIMARY KEY (ArtistId)
-) ZONE chinook;
+);
 
 CREATE TABLE Album
 (
@@ -49,7 +49,7 @@ CREATE TABLE Album
     Title VARCHAR(160),
     ArtistId INT,
     PRIMARY KEY (AlbumId, ArtistId)
-) COLOCATE BY (ArtistId) ZONE chinook ;
+) COLOCATE BY (ArtistId);
 
 CREATE TABLE Customer
 (
@@ -67,7 +67,7 @@ CREATE TABLE Customer
     Email VARCHAR(60),
     SupportRepId INT,
     PRIMARY KEY (CustomerId)
-) ZONE chinook;
+);
 
 CREATE TABLE Invoice
 (
@@ -81,7 +81,7 @@ CREATE TABLE Invoice
     BillingPostalCode VARCHAR(10),
     Total DECIMAL(10,2),
     PRIMARY KEY  (InvoiceId, CustomerId)
-) COLOCATE BY (CustomerId) ZONE chinook;
+) COLOCATE BY (CustomerId);
 
 CREATE TABLE InvoiceLine
 (
@@ -92,7 +92,7 @@ CREATE TABLE InvoiceLine
     UnitPrice DECIMAL(10,2),
     Quantity INT,
     PRIMARY KEY (InvoiceLineId, CustomerId)
-) COLOCATE BY (CustomerId) ZONE chinook;
+) COLOCATE BY (CustomerId);
 
 CREATE TABLE Employee
 (
@@ -112,28 +112,28 @@ CREATE TABLE Employee
     Fax VARCHAR(24),
     Email VARCHAR(60),
     PRIMARY KEY (EmployeeId)
-) ZONE chinook;
+);
 
 CREATE TABLE Genre
 (
     GenreId INT,
     Name VARCHAR(120),
     PRIMARY KEY (GenreId)
-) ZONE chinookReplicated;
+);
 
 CREATE TABLE MediaType
 (
     MediaTypeId INT,
     Name VARCHAR(120),
     PRIMARY KEY (MediaTypeId)
-) ZONE chinookReplicated;
+);
 
 CREATE TABLE Playlist
 (
     PlaylistId INT,
     Name VARCHAR(120),
     PRIMARY KEY  (PlaylistId)
-) ZONE chinook;
+);
 
 CREATE TABLE PlaylistTrack
 (
@@ -142,7 +142,7 @@ CREATE TABLE PlaylistTrack
     ArtistId INT,
     Dummy TINYINT, /* to fix the issue saying that the table must have at least one non-primary key column */
     PRIMARY KEY (PlaylistId, TrackId, ArtistId)
-) COLOCATE BY (ArtistId) ZONE chinook;
+) COLOCATE BY (ArtistId);
 
 CREATE TABLE Track
 (
@@ -157,7 +157,7 @@ CREATE TABLE Track
     Bytes INT,
     UnitPrice DECIMAL(10,2),
     PRIMARY KEY (TrackId, ArtistId)
-) COLOCATE BY (ArtistId) ZONE chinook;
+) COLOCATE BY (ArtistId);
 
 INSERT INTO Genre (GenreId, Name) VALUES (1, 'Rock');
 INSERT INTO Genre (GenreId, Name) VALUES (2, 'Jazz');
