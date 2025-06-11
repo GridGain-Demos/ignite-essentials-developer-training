@@ -31,11 +31,7 @@ DROP TABLE IF EXISTS Playlist;
 DROP TABLE IF EXISTS PlaylistTrack;
 DROP TABLE IF EXISTS Track;
 
-DROP ZONE IF EXISTS Chinook;
-DROP ZONE IF EXISTS ChinookReplicated;
-
-CREATE ZONE Chinook WITH replicas=2, storage_profiles='default';
-CREATE ZONE ChinookReplicated WITH replicas=3, partitions=25, storage_profiles='default';
+ALTER ZONE "Default" SET replicas = 2;
 
 CREATE TABLE Artist
 (
@@ -50,7 +46,7 @@ CREATE TABLE Album
     Title VARCHAR(160),
     ArtistId INT,
     PRIMARY KEY (AlbumId, ArtistId)
-) COLOCATE BY (ArtistId) ZONE chinook;
+) COLOCATE BY (ArtistId);
 
 CREATE TABLE Customer
 (
