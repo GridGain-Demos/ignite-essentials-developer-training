@@ -18,6 +18,9 @@ name: ignite3
 x-ignite-def:
   &ignite-def
   image: apacheignite/ignite:3.0.0
+  environment:
+    - JVM_MAX_MEM=3g
+    - JVM_MIN_MEM=3g
   configs:
     - source: node_config
       target: /opt/ignite/etc/ignite-config.conf
