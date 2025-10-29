@@ -45,7 +45,7 @@ services:
 #      - 10302:10300
 #      - 10802:10800
   cccc:
-    image: gridgain/cloud-connector:2025-07-23
+    image: gridgain/cloud-connector:2025-10-17
     volumes:
       - ./src/main/resources/controlcenter.conf:/opt/gridgain-cloud-connector/application.properties
 
