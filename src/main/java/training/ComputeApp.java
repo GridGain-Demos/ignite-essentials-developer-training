@@ -30,7 +30,6 @@ import org.apache.ignite.compute.task.MapReduceJob;
 import org.apache.ignite.compute.task.MapReduceTask;
 import org.apache.ignite.compute.task.TaskExecutionContext;
 import org.apache.ignite.deployment.DeploymentUnit;
-import org.apache.ignite.marshalling.ByteArrayMarshaller;
 import org.apache.ignite.marshalling.Marshaller;
 import org.apache.ignite.table.Tuple;
 import org.apache.ignite.Ignite;
@@ -150,7 +149,7 @@ public class ComputeApp {
         public CompletableFuture<TopCustomer[]> reduceAsync(TaskExecutionContext taskExecutionContext, Map<UUID, CustomerPrice[]> map) {
             var orderedResults = new ArrayList<CustomerPrice>();
             for (var result : map.values()) {
-                orderedResults.addAll(Arrays.stream(result).collect(Collectors.toCollection(LinkedList::new)));
+                orderedResults.addAll(Arrays.stream(result).filter(Objects::nonNull).collect(Collectors.toCollection(LinkedList::new)));
             }
             orderedResults.sort(Comparator.comparing(CustomerPrice::getPrice));
             Collections.reverse(orderedResults);
