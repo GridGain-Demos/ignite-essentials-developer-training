@@ -34,6 +34,7 @@ import org.apache.ignite.marshalling.ByteArrayMarshaller;
 import org.apache.ignite.marshalling.Marshaller;
 import org.apache.ignite.table.Tuple;
 import org.apache.ignite.Ignite;
+import training.model.CustomerPrice;
 import training.model.TopCustomer;
 
 /**
@@ -74,7 +75,7 @@ public class ComputeApp {
     /**
      * Task that is executed on every cluster node and calculates top-5 local paying customers stored on a node.
      */
-    private static class TopPayingCustomersTask implements MapReduceTask<Integer, Tuple, Tuple, TopCustomer[]> {
+    private static class TopPayingCustomersTask implements MapReduceTask<Integer, Tuple, CustomerPrice[], TopCustomer[]> {
 
         public TopPayingCustomersTask() {
         }
@@ -87,12 +88,12 @@ public class ComputeApp {
         }
 
         @Override
-        public CompletableFuture<List<MapReduceJob<Tuple, Tuple>>> splitAsync(TaskExecutionContext taskExecutionContext, Integer customersCount) {
+        public CompletableFuture<List<MapReduceJob<Tuple, CustomerPrice[]>>> splitAsync(TaskExecutionContext taskExecutionContext, Integer customersCount) {
             this.customerCount = customersCount;
             return taskExecutionContext.ignite().tables().table("InvoiceLine").partitionManager().primaryReplicasAsync()
                     .thenApply(x -> x.entrySet().stream()
                             .map(jobParameter ->
-                                    MapReduceJob.<Tuple,Tuple>builder()
+                                    MapReduceJob.<Tuple,CustomerPrice[]>builder()
                                             .nodes(List.of(jobParameter.getValue()))
                                             .args(Tuple.create()
                                                     // FIXME: don't use hashCode once API is finalised
@@ -101,6 +102,7 @@ public class ComputeApp {
                                             .jobDescriptor(
                                                     JobDescriptor.builder(TopPayingCustomersJob.class)
                                                             .units(deploymentUnit)
+                                                            .resultMarshaller(ByteArrayMarshaller.create())
                                                             .build()
                                             )
                                             .build())
@@ -108,14 +110,19 @@ public class ComputeApp {
                     );
         }
 
-        private static class TopPayingCustomersJob implements ComputeJob<Tuple, Tuple> {
+        private static class TopPayingCustomersJob implements ComputeJob<Tuple, CustomerPrice[]> {
             // Verify results with: select customerid, sum(quantity * unitprice) as price from invoiceline group by customerid order by price desc limit 5
             private static String sql = "select customerid, quantity * unitprice as price from invoiceline where \"__part\" = ?";
 
             private int customerCount = 5;
 
             @Override
-            public CompletableFuture<Tuple> executeAsync(JobExecutionContext jobExecutionContext, Tuple parameters) {
+            public Marshaller<CustomerPrice[], byte[]> resultMarshaller() {
+                return ByteArrayMarshaller.create();
+            }
+
+            @Override
+            public CompletableFuture<CustomerPrice[]> executeAsync(JobExecutionContext jobExecutionContext, Tuple parameters) {
                 final HashMap<Integer, BigDecimal> customerPurchases = new HashMap<>();
 
                 customerCount = parameters.intValue("count");
@@ -131,27 +138,21 @@ public class ComputeApp {
                 r.sort(Map.Entry.comparingByValue());
                 Collections.reverse(r);
 
-                var results = Tuple.create();
+                var results = new ArrayList<CustomerPrice>();
                 for (var p = 0; p < r.size() && p < customerCount; p++) {
-                    results.set(r.get(p).getKey().toString(), r.get(p).getValue());
+                    results.add(new CustomerPrice(r.get(p).getKey(), r.get(p).getValue()));
                 }
-                return CompletableFuture.completedFuture(results);
+                return CompletableFuture.completedFuture(results.toArray(new CustomerPrice[customerCount]));
             }
         }
 
         @Override
-        public CompletableFuture<TopCustomer[]> reduceAsync(TaskExecutionContext taskExecutionContext, Map<UUID, Tuple> map) {
-            var r = new HashMap<Integer,BigDecimal>();
+        public CompletableFuture<TopCustomer[]> reduceAsync(TaskExecutionContext taskExecutionContext, Map<UUID, CustomerPrice[]> map) {
+            var orderedResults = new ArrayList<CustomerPrice>();
             for (var result : map.values()) {
-                for (var e = 0; e < result.columnCount(); e++) {
-                    // FIXME: where do the quotes come from?
-                    var customerId = result.columnName(e).replaceAll("\"", "");
-                    var price = result.<BigDecimal>value(customerId);
-                    r.put(Integer.valueOf(customerId), price);
-                }
+                orderedResults.addAll(Arrays.stream(result).collect(Collectors.toCollection(LinkedList::new)));
             }
-            var orderedResults = new ArrayList<>(r.entrySet());
-            orderedResults.sort(Map.Entry.comparingByValue());
+            orderedResults.sort(Comparator.comparing(CustomerPrice::getPrice));
             Collections.reverse(orderedResults);
 
             var customersCache = taskExecutionContext.ignite().tables().table("Customer").recordView();
@@ -159,7 +160,7 @@ public class ComputeApp {
             for (var p = 0; p < orderedResults.size() && p < customerCount; p++) {
                 var newRecord = Tuple.create();
 
-                var key = orderedResults.get(p).getKey();
+                var key = orderedResults.get(p).getCustomerId();
 
                 var customerRecord = customersCache.get(null, Tuple.create().set("customerId", key));
 
@@ -175,9 +176,9 @@ public class ComputeApp {
                             .set("city", "unknown")
                             .set("country", "unknown");
                 }
-                newRecord.set("price", orderedResults.get(p).getValue());
+                newRecord.set("price", orderedResults.get(p).getPrice());
 
-                var val = new TopCustomer(key, orderedResults.get(p).getValue());
+                var val = new TopCustomer(key, orderedResults.get(p).getPrice());
                 val.setFullName(customerRecord.stringValue("firstName") + " " + customerRecord.stringValue("lastName"));
                 val.setCity(customerRecord.stringValue("city"));
                 val.setCountry(customerRecord.stringValue("country"));
