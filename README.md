@@ -19,7 +19,7 @@ Check [the complete schedule](https://www.gridgain.com/products/services/trainin
     ```
 
 2. (optionally), open the project in your favourite IDE such as IntelliJ or Eclipse, or just use a simple text editor
-and command-line instructions prepared for all the samples.    
+and command-line instructions prepared for all the samples.
 
 ## Sign up for GridGain's Nebula service
 
@@ -51,28 +51,28 @@ Start a two-node Ignite cluster:
 8. Click `Continue`
 9. Click `Attach`
 10. Initialise the cluster by clicking the `Initialise` button at the top-right of the screen
- 
+
 ## Creating Media Store Schema and Loading Data
 
 Now you need to create a Media Store schema and load the cluster with sample data. Use SQLLine tool to achieve that:
 
 1. Open a terminal window and navigate to the root directory of this project.
 2. Load the media store database:
-	
+
 	a. Start the Command Line Interface (CLI)
-	
+
     ```bash
-   docker run -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -v ./config/media_store.sql:/opt/ignite/downloads/media_store.sql --rm --network ignite3_default -it apacheignite/ignite:3.0.0 cli
+   docker run -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -v ./config/media_store.sql:/opt/ignite/downloads/media_store.sql --rm --network ignite3_default -it apacheignite/ignite:3.1.0 cli
    ```
-   
+
    b. Connect to the cluster.
 
    ```bash
    connect http://node1:10300
    ```
-   
+
    c. Execute SQL command to load the sample data.
-   
+
    ```bash
    sql --file=/opt/ignite/downloads/media_store.sql
     ```
@@ -88,7 +88,7 @@ With the Media Store database loaded, you can check how Ignite distributed the r
 
 ## Affinity Co-location - Optimizing Complex SQL Queries With JOINs
 
-Ignite supports SQL for data processing including distributed joins, grouping and sorting. In this section, you're 
+Ignite supports SQL for data processing including distributed joins, grouping and sorting. In this section, you're
 going to run basic SQL operations as well as more advanced ones.
 
 ### Querying Single Table
@@ -121,36 +121,36 @@ JOIN with the `Artist` table:
 3. Examine the output. Your instructor will give hints for what to look for. It will look something like this:
 
 	```bash
-	Limit(fetch=[20]): rowcount = 20.0, cumulative cost = IgniteCost [rowCount=15318.06, cpu=77499.96615043783, memory=33461.76, io=178134.0, network=101068.0], id = 35293  
+	Limit(fetch=[20]): rowcount = 20.0, cumulative cost = IgniteCost [rowCount=15318.06, cpu=77499.96615043783, memory=33461.76, io=178134.0, network=101068.0], id = 35293
 	```
 
 ## Running Co-located Compute Tasks
 
 Run `training.ComputeApp` that uses Apache Ignite compute capabilities for a calculation of top-5 paying customers.
-The compute task executes on every cluster node, iterates through local records and responds to the application that 
+The compute task executes on every cluster node, iterates through local records and responds to the application that
 merges partial results.
 
 1. Build an executable JAR with the applications' classes (or just start the app with IntelliJ IDEA or Eclipse):
 
     ```bash
-    mvn clean package 
+    mvn clean package
     ```
 2. Load the code into your cluster:
 
 	a. Start the CLI.
 
     ```bash
-   docker run -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -v ./target/ignite-essentials-developer-training-1.0-SNAPSHOT.jar:/opt/ignite/downloads/ignite-essentials-developer-training-1.0-SNAPSHOT.jar --rm --network ignite3_default -it apacheignite/ignite:3.0.0 cli
+   docker run -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -v ./target/ignite-essentials-developer-training-1.0-SNAPSHOT.jar:/opt/ignite/downloads/ignite-essentials-developer-training-1.0-SNAPSHOT.jar --rm --network ignite3_default -it apacheignite/ignite:3.1.0 cli
    ```
 
 	b. Connect to the cluster.
-	
+
 	```bash
    connect http://node1:10300
    ```
-   
+
    c. Deploy the code to the cluster.
-   
+
    ```bash
    cluster unit deploy --version 1.0.0 --path=/opt/ignite/downloads/ignite-essentials-developer-training-1.0-SNAPSHOT.jar essentialsCompute
     ```
