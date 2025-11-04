@@ -121,7 +121,48 @@ JOIN with the `Artist` table:
 3. Examine the output. Your instructor will give hints for what to look for. It will look something like this:
 
 	```bash
-	Limit(fetch=[20]): rowcount = 20.0, cumulative cost = IgniteCost [rowCount=15318.06, cpu=77499.96615043783, memory=33461.76, io=178134.0, network=101068.0], id = 35293
+	Sort
+		collation: [DURATION DESC]
+		fetch: 20
+		est: (rows=1)
+	  ColocatedHashAggregate
+		  fieldNames: [TRACKID, TRACK_NAME, GENRE, ARTIST, DURATION]
+		  group: [TRACKID, TRACK_NAME, GENRE, ARTIST]
+		  aggregation: [MAX($f4)]
+		  est: (rows=1)
+		Project
+			fieldNames: [TRACKID, TRACK_NAME, GENRE, ARTIST, $f4]
+			projection: [TRACKID, NAME, NAME$1, NAME$0, /(MILLISECONDS, *(1000, 60))]
+			est: (rows=1)
+		  HashJoin
+			  predicate: =(GENREID, GENREID$0)
+			  fieldNames: [TRACKID, NAME, ARTISTID, GENREID, MILLISECONDS, ARTISTID$0, NAME$0, GENREID$0, NAME$1]
+			  type: inner
+			  est: (rows=1)
+			Exchange
+				distribution: single
+				est: (rows=1)
+			  HashJoin
+				  predicate: =(ARTISTID, ARTISTID$0)
+				  fieldNames: [TRACKID, NAME, ARTISTID, GENREID, MILLISECONDS, ARTISTID$0, NAME$0]
+				  type: left
+				  est: (rows=1)
+				TableScan
+					table: PUBLIC.TRACK
+					predicate: <(GENREID, 17)
+					fieldNames: [TRACKID, NAME, ARTISTID, GENREID, MILLISECONDS]
+					est: (rows=1)
+				TableScan
+					table: PUBLIC.ARTIST
+					fieldNames: [ARTISTID, NAME]
+					est: (rows=1)
+			Exchange
+				distribution: single
+				est: (rows=1)
+			  TableScan
+				  table: PUBLIC.GENRE
+				  fieldNames: [GENREID, NAME]
+				  est: (rows=1)
 	```
 
 ## Running Co-located Compute Tasks
