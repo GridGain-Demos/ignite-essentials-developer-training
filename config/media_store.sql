@@ -137,7 +137,6 @@ CREATE TABLE PlaylistTrack
     PlaylistId INT,
     TrackId INT,
     ArtistId INT,
-    Dummy TINYINT, /* to fix the issue saying that the table must have at least one non-primary key column */
     PRIMARY KEY (PlaylistId, TrackId, ArtistId)
 ) COLOCATE BY (ArtistId);
 
