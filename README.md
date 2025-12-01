@@ -62,7 +62,7 @@ Now you need to create a Media Store schema and load the cluster with sample dat
 	a. Start the Command Line Interface (CLI)
 
     ```bash
-   docker run -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -v ./config/media_store.sql:/opt/ignite/downloads/media_store.sql --rm --network ignite3_default -it apacheignite/ignite:3.1.0 cli
+   docker run -v ./config/media_store.sql:/opt/ignite/downloads/media_store.sql --rm --network ignite3_default -it apacheignite/ignite:3.1.0 cli
    ```
 
    b. Connect to the cluster.
@@ -181,7 +181,7 @@ merges partial results.
 	a. Start the CLI.
 
     ```bash
-   docker run -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -v ./target/ignite-essentials-developer-training-1.0-SNAPSHOT.jar:/opt/ignite/downloads/ignite-essentials-developer-training-1.0-SNAPSHOT.jar --rm --network ignite3_default -it apacheignite/ignite:3.1.0 cli
+   docker run -v ./target/ignite-essentials-developer-training-1.0-SNAPSHOT.jar:/opt/ignite/downloads/ignite-essentials-developer-training-1.0-SNAPSHOT.jar --rm --network ignite3_default -it apacheignite/ignite:3.1.0 cli
    ```
 
 	b. Connect to the cluster.
