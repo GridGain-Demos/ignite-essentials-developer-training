@@ -89,14 +89,13 @@ public class ComputeApp {
         @Override
         public CompletableFuture<List<MapReduceJob<Tuple, CustomerPrice[]>>> splitAsync(TaskExecutionContext taskExecutionContext, Integer customersCount) {
             this.customerCount = customersCount;
-            return taskExecutionContext.ignite().tables().table("InvoiceLine").partitionManager().primaryReplicasAsync()
+            return taskExecutionContext.ignite().tables().table("InvoiceLine").partitionDistribution().primaryReplicasAsync()
                     .thenApply(x -> x.entrySet().stream()
                             .map(jobParameter ->
                                     MapReduceJob.<Tuple,CustomerPrice[]>builder()
                                             .nodes(List.of(jobParameter.getValue()))
                                             .args(Tuple.create()
-                                                    // FIXME: don't use hashCode once API is finalised
-                                                    .set("partition",jobParameter.getKey().hashCode())
+                                                    .set("partition", jobParameter.getKey().id())
                                                     .set("count", customersCount))
                                             .jobDescriptor(
                                                     JobDescriptor.builder(TopPayingCustomersJob.class)
@@ -111,7 +110,7 @@ public class ComputeApp {
 
         private static class TopPayingCustomersJob implements ComputeJob<Tuple, CustomerPrice[]> {
             // Verify results with: select customerid, sum(quantity * unitprice) as price from invoiceline group by customerid order by price desc limit 5
-            private static String sql = "select customerid, quantity * unitprice as price from invoiceline where \"__part\" = ?";
+            private static final String sql = "select customerid, quantity * unitprice as price from invoiceline where \"__partition_id\" = ?";
 
             private int customerCount = 5;
 
@@ -126,7 +125,7 @@ public class ComputeApp {
 
                 customerCount = parameters.intValue("count");
 
-                try (var results = jobExecutionContext.ignite().sql().execute(null, sql, parameters.intValue("partition"))) {
+                try (var results = jobExecutionContext.ignite().sql().execute(null, sql, parameters.longValue("partition"))) {
                     while (results.hasNext()) {
                         var row = results.next();
                         customerPurchases.merge(row.intValue("customerId"), row.value("price"), BigDecimal::add);
