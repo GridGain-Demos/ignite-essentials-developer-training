@@ -17,13 +17,13 @@ name: ignite3
 
 x-ignite-def:
   &ignite-def
-  image: apacheignite/ignite:3.1.0
+  image: gridgain/gridgain9:9.1.8
   environment:
     - JVM_MAX_MEM=3g
     - JVM_MIN_MEM=3g
   configs:
     - source: node_config
-      target: /opt/ignite/etc/ignite-config.conf
+      target: /opt/gridgain/etc/gridgain-config.conf
 
 services:
   node1:
