@@ -33,6 +33,7 @@ import org.apache.ignite.deployment.DeploymentUnit;
 import org.apache.ignite.marshalling.Marshaller;
 import org.apache.ignite.table.Tuple;
 import org.apache.ignite.Ignite;
+import org.apache.ignite.tx.Transaction;
 import training.model.CustomerPrice;
 import training.model.TopCustomer;
 
@@ -126,7 +127,7 @@ public class ComputeApp {
 
                 customerCount = parameters.intValue("count");
 
-                try (var results = jobExecutionContext.ignite().sql().execute(null, sql, parameters.intValue("partition"))) {
+                try (var results = jobExecutionContext.ignite().sql().execute((Transaction) null, sql, parameters.intValue("partition"))) {
                     while (results.hasNext()) {
                         var row = results.next();
                         customerPurchases.merge(row.intValue("customerId"), row.value("price"), BigDecimal::add);

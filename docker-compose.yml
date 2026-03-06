@@ -17,13 +17,13 @@ name: ignite3
 
 x-ignite-def:
   &ignite-def
-  image: apacheignite/ignite:3.1.0
+  image: gridgain/gridgain9:9.1.8-openjdk21
   environment:
     - JVM_MAX_MEM=3g
     - JVM_MIN_MEM=3g
   configs:
     - source: node_config
-      target: /opt/ignite/etc/ignite-config.conf
+      target: /opt/gridgain/etc/gridgain-config.conf
 
 services:
   node1:
@@ -38,14 +38,14 @@ services:
     ports:
       - 10301:10300
       - 10801:10800
-#  node3:
-#    << : *ignite-def
-#    command: --node-name node3
-#    ports:
-#      - 10302:10300
-#      - 10802:10800
+  node3:
+    << : *ignite-def
+    command: --node-name node3
+    ports:
+      - 10302:10300
+      - 10802:10800
   cccc:
-    image: gridgain/cloud-connector:2025-10-17
+    image: gridgain/cloud-connector:2026-02-26
     volumes:
       - ./src/main/resources/controlcenter.conf:/opt/gridgain-cloud-connector/application.properties
 
