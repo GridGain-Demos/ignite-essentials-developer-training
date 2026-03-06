@@ -197,6 +197,8 @@ merges partial results.
    ```bash
    cluster unit deploy --version 1.0.0 --path=/opt/gridgain/downloads/ignite-essentials-developer-training-1.0-SNAPSHOT.jar essentialsCompute
     ```
+
+    It's also possible to use Control Center to deploy your code if you prefer. Study the "Deployment" tab to find out more.
 3. Execute the `ComputeApp` program with the following command:
 
 ```shell
@@ -204,3 +206,13 @@ mvn exec:java
 ```
 
 Or run directly from your preferred IDE.
+
+4. Edit `ComputeApp` and change the number of customers to return from 5 to 10. There's no need to redeploy the compute job because only the caller needs to change.
+
+## Tidying up
+
+When you've finished with the exercises, you can shut down the cluster and clean up with the following command:
+
+```shell
+docker compose down
+```
