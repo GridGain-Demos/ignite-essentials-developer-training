@@ -8,7 +8,7 @@ Check [the complete schedule](https://www.gridgain.com/products/services/trainin
 * GridGain license file. Instructions will be emailed when you register, but, in short, grab your key [here](https://www.gridgain.com/tryfree)
 * Docker and Docker Compose installed on your system
 * Basic familiarity with command-line operations
-* Java 11 or higher installed (for connecting to the cluster)
+* Java 11, 17 or 21 (for connecting to the cluster)
 * Maven
 * (An IDE such as IntelliJ will make things a lot easier but is not strictly necessary)
 
