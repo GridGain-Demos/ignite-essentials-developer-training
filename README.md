@@ -5,7 +5,6 @@ Check [the complete schedule](https://www.gridgain.com/products/services/trainin
 
 ## Setting Up Environment
 
-* GridGain license file. Instructions will be emailed when you register, but, in short, grab your key [here](https://www.gridgain.com/tryfree)
 * Docker and Docker Compose installed on your system
 * Basic familiarity with command-line operations
 * Java 11, 17 or 21 (for connecting to the cluster)
@@ -47,12 +46,12 @@ Start a two-node Ignite cluster:
    docker compose up -d
    ```
 
-5. Switch back to your browser and select `Attach GridGain`
+5. Switch back to your browser and select `Attach Apache Ignite`
 6. In the "Connector" dropdown, select `Ignite Essentials`
 7. The `URL of the REST API` is `http://node1:10300`
 8. Click `Continue`
 9. Click `Attach`
-10. Initialize the cluster by clicking the `Initialize` button at the top-right of the screen. Drop in your license file as suggested
+10. Initialize the cluster by clicking the `Initialize` button at the top-right of the screen
 
 ## Creating Media Store Schema and Loading Data
 
@@ -64,7 +63,7 @@ Now you need to create a Media Store schema and load the cluster with sample dat
 	a. Start the Command Line Interface (CLI)
 
     ```bash
-   docker run -v ./config/media_store.sql:/opt/gridgain/downloads/media_store.sql --rm --network ignite3_default -it gridgain/gridgain9:9.1.8 cli
+   docker run -v ./config/media_store.sql:/opt/ignite/downloads/media_store.sql --rm --network ignite3_default -it apacheignite/ignite:3.1.0 cli
    ```
 
    b. Connect to the cluster.
@@ -76,7 +75,7 @@ Now you need to create a Media Store schema and load the cluster with sample dat
    c. Execute SQL command to load the sample data.
 
    ```bash
-   sql --file=/opt/gridgain/downloads/media_store.sql
+   sql --file=/opt/ignite/downloads/media_store.sql
     ```
 
 Keep the connection open as you'll use it for following exercises.
@@ -183,7 +182,7 @@ merges partial results.
 	a. Start the CLI.
 
     ```bash
-   docker run -v ./target/ignite-essentials-developer-training-1.0-SNAPSHOT.jar:/opt/gridgain/downloads/ignite-essentials-developer-training-1.0-SNAPSHOT.jar --rm --network ignite3_default -it gridgain/gridgain9:9.1.8 cli
+   docker run -v ./target/ignite-essentials-developer-training-1.0-SNAPSHOT.jar:/opt/ignite/downloads/ignite-essentials-developer-training-1.0-SNAPSHOT.jar --rm --network ignite3_default -it apacheignite/ignite:3.1.0 cli
    ```
 
 	b. Connect to the cluster.
@@ -195,7 +194,7 @@ merges partial results.
    c. Deploy the code to the cluster.
 
    ```bash
-   cluster unit deploy --version 1.0.0 --path=/opt/gridgain/downloads/ignite-essentials-developer-training-1.0-SNAPSHOT.jar essentialsCompute
+   cluster unit deploy --version 1.0.0 --path=/opt/ignite/downloads/ignite-essentials-developer-training-1.0-SNAPSHOT.jar essentialsCompute
     ```
 
     It's also possible to use Control Center to deploy your code if you prefer. Study the "Deployment" tab to find out more.
