@@ -32,7 +32,7 @@ We'll use the Control Center component to execute SQL queries and view cluster i
 
 ## Starting Ignite Cluster
 
-Start a two-node Ignite cluster:
+Start a Three-node Ignite cluster:
 
 1. Open a terminal window and navigate to the root directory of this project.
 
