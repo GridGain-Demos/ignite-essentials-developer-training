@@ -67,6 +67,10 @@ cd ignite-essentials-developer-training
 
 ## 2. Start the Cluster
 
+You should have received a license key a day or two before this session. Check your spam folder if you have not seen it yet. If you registered at the last minute, you can download a key from [our website](https://www.gridgain.com/tryfree).
+
+Copy your license key to the `docker` folder. Ensure it's called `gridgain-license.xml`.
+
 ```bash
 docker compose -f docker/docker-compose.yaml up -d
 ```

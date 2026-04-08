@@ -10,7 +10,7 @@
 #     mount and the container's filesystem.
 
 x-gg-node: &gg-node
-  image: gridgain/community:8.9.32-openjdk17
+  image: gridgain/enterprise:8.9.32-openjdk17-slim
   environment:
     CONFIG_URI: /opt/config/training-node-config.xml
     JVM_OPTS: "-Xms2g -Xmx2g -server -XX:MaxMetaspaceSize=256m -Djava.net.preferIPv4Stack=true"
@@ -26,6 +26,7 @@ services:
       - ./config/training-node-config.xml:/opt/config/training-node-config.xml:ro
       - ./config/ignite-log4j2.xml:/opt/gridgain/config/ignite-log4j2.xml:ro
       - ./libs:/opt/gridgain/libs/user_libs:ro
+      - ./gridgain-license.xml:/opt/gridgain/gridgain-license.xml
       - ./data/node1:/opt/gridgain/work
 
   node2:
@@ -35,6 +36,7 @@ services:
       - ./config/training-node-config.xml:/opt/config/training-node-config.xml:ro
       - ./config/ignite-log4j2.xml:/opt/gridgain/config/ignite-log4j2.xml:ro
       - ./libs:/opt/gridgain/libs/user_libs:ro
+      - ./gridgain-license.xml:/opt/gridgain/gridgain-license.xml
       - ./data/node2:/opt/gridgain/work
 
   node3:
@@ -44,6 +46,7 @@ services:
       - ./config/training-node-config.xml:/opt/config/training-node-config.xml:ro
       - ./config/ignite-log4j2.xml:/opt/gridgain/config/ignite-log4j2.xml:ro
       - ./libs:/opt/gridgain/libs/user_libs:ro
+      - ./gridgain-license.xml:/opt/gridgain/gridgain-license.xml
       - ./data/node3:/opt/gridgain/work
 
   # Maven + JDK 17 sidecar for students who don't have Maven installed locally.
