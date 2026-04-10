@@ -16,7 +16,7 @@ file like this:
     java @src/main/resources/j17.params -cp libs/core.jar training.ServerStartup
    ```
 
-See the [Ignite documentation](https://ignite.apache.org/docs/latest/setup#running-ignite-with-java-11-or-later)
+See the [GridGain documentation](https://www.gridgain.com/docs/gridgain8/latest/getting-started/quick-start/java#running-gridgain-with-java-11-or-later)
 for more details. The steps that follow assume Java 8 or 11.
 
 ## Clone The Project
@@ -41,8 +41,7 @@ start the sample code with IntelliJ IDEA or Eclipse. The JAR is used by other to
     mvn clean package -P core
     ```
    If you see build errors, it may be because a firewall or proxy server is blocking access to
-[GridGain's External Maven Repo](https://www.gridgainsystems.com/nexus/content/repositories/external) which is used
-to download the module that connects to GridGain Nebula.
+[GridGain's External Maven Repo](https://www.gridgainsystems.com/nexus/content/repositories/external).
 3. Start the first cluster node (or just start the app with IntelliJ IDEA or Eclipse):
     ```bash
     java -cp libs/core.jar training.ServerStartup
