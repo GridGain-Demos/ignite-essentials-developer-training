@@ -1,0 +1,63 @@
+# Reference training cluster for GridGain Community (GG8).
+#
+# Per-node state:
+#   - Each node's work dir is bind-mounted at ./data/nodeN/ on the
+#     host. Holds logs, marshaller metadata, and — when persistence is
+#     enabled — db/wal/snapshots.
+#   - Mount target is the image's default ${IGNITE_HOME}/work because
+#     log4j2 hardcodes its log path relative to IGNITE_HOME. Pointing
+#     IGNITE_WORK_DIR elsewhere would split state between the host
+#     mount and the container's filesystem.
+
+x-gg-node: &gg-node
+  image: gridgain/community:8.9.32-openjdk17
+  environment:
+    CONFIG_URI: /opt/config/training-node-config.xml
+    JVM_OPTS: "-Xms2g -Xmx2g -server -XX:MaxMetaspaceSize=256m -Djava.net.preferIPv4Stack=true"
+  networks: [cluster]
+
+services:
+  node1:
+    <<: *gg-node
+    hostname: node1
+    ports:
+      - "10800:10800"
+    volumes:
+      - ./config/training-node-config.xml:/opt/config/training-node-config.xml:ro
+      - ./config/ignite-log4j2.xml:/opt/gridgain/config/ignite-log4j2.xml:ro
+      - ./libs:/opt/gridgain/libs/user_libs:ro
+      - ./data/node1:/opt/gridgain/work
+
+  node2:
+    <<: *gg-node
+    hostname: node2
+    volumes:
+      - ./config/training-node-config.xml:/opt/config/training-node-config.xml:ro
+      - ./config/ignite-log4j2.xml:/opt/gridgain/config/ignite-log4j2.xml:ro
+      - ./libs:/opt/gridgain/libs/user_libs:ro
+      - ./data/node2:/opt/gridgain/work
+
+  node3:
+    <<: *gg-node
+    hostname: node3
+    volumes:
+      - ./config/training-node-config.xml:/opt/config/training-node-config.xml:ro
+      - ./config/ignite-log4j2.xml:/opt/gridgain/config/ignite-log4j2.xml:ro
+      - ./libs:/opt/gridgain/libs/user_libs:ro
+      - ./data/node3:/opt/gridgain/work
+
+  # Maven + JDK 17 sidecar for students who don't have Maven installed locally.
+  # profiles=[tools] prevents `docker compose up -d` from starting this service.
+  app:
+    profiles: ["tools"]
+    image: maven:3.9-eclipse-temurin-17
+    working_dir: /work
+    environment:
+      IGNITE_ADDRESS: "node1:10800"
+    volumes:
+      - ..:/work                     # training project root
+      - ~/.m2:/root/.m2              # host's Maven local repository
+    networks: [cluster]
+
+networks:
+  cluster:

@@ -1,0 +1,11 @@
+# GridGain work directories (persistent data)
+data/
+data-dcr/
+
+# Log directories
+logs/
+logs-dcr/
+
+# Server task jars — built here by `mvn package -P apps`, not versioned.
+# .gitkeep is kept so the mount target directory exists in fresh clones.
+libs/*.jar

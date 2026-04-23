@@ -16,156 +16,46 @@
  */
 package training;
 
-import java.math.BigDecimal;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.TreeSet;
-import javax.cache.Cache;
 import training.model.TopCustomer;
-import org.apache.ignite.Ignite;
-import org.apache.ignite.IgniteCache;
 import org.apache.ignite.Ignition;
-import org.apache.ignite.binary.BinaryObject;
-import org.apache.ignite.cache.CachePeekMode;
-import org.apache.ignite.cache.query.QueryCursor;
-import org.apache.ignite.cache.query.ScanQuery;
-import org.apache.ignite.cluster.ClusterGroup;
-import org.apache.ignite.lang.IgniteCallable;
-import org.apache.ignite.resources.IgniteInstanceResource;
+import org.apache.ignite.client.IgniteClient;
+import org.apache.ignite.configuration.ClientConfiguration;
 
 /**
- * The application uses Apache Ignite compute capabilities for a calculation of the top-5 paying customers. The compute
- * task executes on every cluster node, iterates through local records and responds to the application that merges partial
- * results.
+ * Thin-client driver that triggers a server-deployed compute task to
+ * calculate the top-N paying customers. The real work happens in
+ * training.compute.TopPayingCustomersTask.
  *
- * Update the implementation of the compute task to return top-10 paying customers.
+ * Update the task implementation to return the top-10 paying customers.
  */
 public class ComputeApp {
 
     public static void main(String[] args) throws InterruptedException {
-        Ignition.setClientMode(true);
-
-        try (Ignite ignite = Ignition.start("ignite-config.xml")) {
-            calculateTopPayingCustomers(ignite);
-
-            // wait for metrics to flush to Control Center
-            Thread.sleep(5000L);
-        }
-    }
-
-    private static void calculateTopPayingCustomers(Ignite ignite) {
-        ClusterGroup serversGroup = ignite.cluster().forServers();
+        String addr = System.getenv().getOrDefault("IGNITE_ADDRESS", "localhost:10800");
+        ClientConfiguration cfg = new ClientConfiguration().setAddresses(addr);
 
         int customersCount = 5;
 
-        Collection<TreeSet<TopCustomer>> results = ignite.compute(
-            serversGroup).broadcast(new TopPayingCustomersTask(customersCount));
+        try (IgniteClient client = Ignition.startClient(cfg)) {
+            System.out.println(">>> Connected to " + addr);
 
-        printTopPayingCustomers(results, customersCount);
-    }
+            TreeSet<TopCustomer> top = client.compute().execute(
+                "training.compute.TopPayingCustomersTask", customersCount);
 
-    /**
-     * Task that is executed on every cluster node and calculates top-5 local paying customers stored on a node.
-     */
-    private static class TopPayingCustomersTask implements IgniteCallable<TreeSet<TopCustomer>> {
-        @IgniteInstanceResource
-        private Ignite localNode;
-
-        private HashMap<Integer, BigDecimal> customerPurchases = new HashMap<>();
-
-        int customersCount;
-
-        public TopPayingCustomersTask(int customersCount) {
-            this.customersCount = customersCount;
-        }
-
-        public TreeSet<TopCustomer> call() throws Exception {
-            IgniteCache<BinaryObject, BinaryObject> invoiceLineCache = localNode.cache(
-                "InvoiceLine").withKeepBinary();
-
-            ScanQuery scanQuery = new ScanQuery();
-            scanQuery.setLocal(true);
-
-            QueryCursor<Cache.Entry<BinaryObject, BinaryObject>> cursor = invoiceLineCache.query(scanQuery);
-
-
-            cursor.forEach(entry -> {
-                BinaryObject val = entry.getValue();
-                BinaryObject key = entry.getKey();
-
-                BigDecimal unitPrice = val.field("unitPrice");
-                int quantity = val.field("quantity");
-
-                processPurchase(key.field("customerId"), unitPrice.multiply(new BigDecimal(quantity)));
-            });
-
-            return calculateTopCustomers();
-        }
-
-        private void processPurchase(int itemId, BigDecimal price) {
-            BigDecimal totalPrice = customerPurchases.get(itemId);
-
-            if (totalPrice == null)
-                customerPurchases.put(itemId, price);
-            else
-                customerPurchases.put(itemId, totalPrice.add(price));
-        }
-
-        private TreeSet<TopCustomer> calculateTopCustomers() {
-            IgniteCache<Integer, BinaryObject> customersCache = localNode.cache("Customer").withKeepBinary();
-
-            TreeSet<TopCustomer> sortedPurchases = new TreeSet<>();
-
-            TreeSet<TopCustomer> top = new TreeSet<>();
-
-            customerPurchases.entrySet().forEach(entry -> {
-                TopCustomer topCustomer = new TopCustomer(entry.getKey(), entry.getValue());
-
-                sortedPurchases.add(topCustomer);
-            });
-
-            Iterator<TopCustomer> iterator = sortedPurchases.descendingSet().iterator();
-
-            int counter = 0;
-
-            System.out.println(">>> Top " + customersCount + " Paying Listeners: ");
-
-            while (iterator.hasNext() && counter++ < customersCount) {
-                TopCustomer customer = iterator.next();
-
-                // It's safe to use localPeek because invoices are co-located with customer data.
-                BinaryObject customerRecord = customersCache.localPeek(customer.getCustomerId(), CachePeekMode.PRIMARY);
-
-                customer.setFullName(customerRecord.field("firstName") +
-                    " " + customerRecord.field("lastName"));
-                customer.setCity(customerRecord.field("city"));
-                customer.setCountry(customerRecord.field("country"));
-
-                top.add(customer);
-
-                System.out.println(customer);
-            }
-
-            return top;
+            printTopPayingCustomers(top, customersCount);
         }
     }
 
-    private static void printTopPayingCustomers(Collection<TreeSet<TopCustomer>> results, int customersCount) {
+    private static void printTopPayingCustomers(TreeSet<TopCustomer> top, int customersCount) {
         System.out.println(">>> Top " + customersCount + " Paying Listeners Across All Cluster Nodes");
 
-        Iterator<TreeSet<TopCustomer>> iterator = results.iterator();
-
-        TreeSet<TopCustomer> firstSet = iterator.next();
-
-        while (iterator.hasNext())
-            firstSet.addAll(iterator.next());
-
-        Iterator<TopCustomer> customerIterator = firstSet.descendingSet().iterator();
-
+        Iterator<TopCustomer> iterator = top.descendingSet().iterator();
         int counter = 0;
 
-        while (customerIterator.hasNext() && counter++ < customersCount)
-            System.out.println(customerIterator.next());
+        while (iterator.hasNext() && counter++ < customersCount) {
+            System.out.println(iterator.next());
+        }
     }
 }

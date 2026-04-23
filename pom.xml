@@ -10,8 +10,11 @@
 
     <properties>
         <ignite.project>org.gridgain</ignite.project>
-	    <ignite.version>8.9.31</ignite.version>
-	    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <ignite.version>8.9.32</ignite.version>
+        <java.version>17</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <repositories>
@@ -27,82 +30,26 @@
             <artifactId>ignite-core</artifactId>
             <version>${ignite.version}</version>
         </dependency>
-
-        <dependency>
-            <groupId>${ignite.project}</groupId>
-            <artifactId>ignite-indexing</artifactId>
-            <version>${ignite.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>${ignite.project}</groupId>
-            <artifactId>ignite-spring</artifactId>
-            <version>${ignite.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>${ignite.project}</groupId>
-            <artifactId>ignite-control-utility</artifactId>
-            <version>${ignite.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>sqlline</groupId>
-            <artifactId>sqlline</artifactId>
-            <version>1.12.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.gridgain</groupId>
-            <artifactId>control-center-agent</artifactId>
-            <version>${ignite.version}</version>
-        </dependency>
     </dependencies>
 
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-		<artifactId>maven-compiler-plugin</artifactId>
-		<version>3.11.0</version>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
             </plugin>
         </plugins>
     </build>
 
     <profiles>
-        <profile>
-            <id>core</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-shade-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>shade</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <filters>
-                                <filter>
-                                    <artifact>${project.groupId}:${project.artifactId}</artifact>
-                                    <excludes>
-                                        <exclude>training/ComputeApp*</exclude>
-                                        <exclude>training/KeyValueApp.class</exclude>
-                                        <exclude>training/model/*</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
-                            <outputFile>${project.basedir}/libs/core.jar</outputFile>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
+        <!--
+            `apps` profile produces two jars:
+              libs/apps.jar              — shaded fat jar for KeyValueApp and ComputeApp
+              docker/libs/server-tasks.jar — task + model classes only; no ignite-core
+                                            (the server image already has it)
+            Changing the task class requires `docker compose restart` so nodes reload it.
+        -->
         <profile>
             <id>apps</id>
             <build>
@@ -110,6 +57,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-shade-plugin</artifactId>
+                        <version>3.5.0</version>
                         <executions>
                             <execution>
                                 <phase>package</phase>
@@ -122,6 +70,29 @@
                             <finalName>apps</finalName>
                             <outputFile>${project.basedir}/libs/apps.jar</outputFile>
                         </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <version>3.3.0</version>
+                        <executions>
+                            <execution>
+                                <id>server-tasks-jar</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <finalName>server</finalName>
+                                    <classifier>tasks</classifier>
+                                    <outputDirectory>${project.basedir}/docker/libs</outputDirectory>
+                                    <includes>
+                                        <include>training/compute/**</include>
+                                        <include>training/model/**</include>
+                                    </includes>
+                                </configuration>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>

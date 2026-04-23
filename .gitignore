@@ -1,0 +1,14 @@
+# Maven
+target/
+dependency-reduced-pom.xml
+
+# Build output — only the repo-root libs/ (shaded jars go here via the pom's
+# maven-shade-plugin). The docker/libs/ user_libs mount is kept in git.
+/libs/
+
+# Ignite default work dir (appears when running thick client without IGNITE_HOME)
+ignite/
+
+# IDE
+*.iml
+.idea/
