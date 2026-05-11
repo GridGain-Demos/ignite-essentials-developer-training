@@ -88,7 +88,7 @@ Expect `servers=3` in the output.
 ## 3. Load the Media Store Schema
 
 ```bash
-docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true < config/media_store.sql
+echo '!run /tmp/media_store.sql' | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true
 ```
 
 Verify row counts:
