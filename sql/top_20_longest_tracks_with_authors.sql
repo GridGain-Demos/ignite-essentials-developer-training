@@ -1,3 +1,4 @@
+!set maxWidth 160
 SELECT track.trackId, track.name as track_name, genre.name as genre, artist.name as artist,
 MAX(milliseconds / (1000 * 60)) as duration FROM track
 LEFT JOIN artist ON track.artistId = artist.artistId
