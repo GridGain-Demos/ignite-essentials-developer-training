@@ -87,6 +87,14 @@ Expect `servers=3` in the output.
 
 ## 3. Load the Media Store Schema
 
+Inspect the DDL script and then copy it onto one of the nodes:
+
+```bash
+docker compose -f docker/docker-compose.yaml cp docker/sql/media_store.sql node1:/tmp
+```
+
+Use sqllines "run" command to execute the SQL script:
+
 ```bash
 echo '!run /tmp/media_store.sql' | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true
 ```
@@ -148,10 +156,16 @@ echo "y" | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridg
 echo "y" | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/control.sh --meta remove --typeName training.model.Track
 ```
 
-Now reload the schema:
+Now reload the schema by copying the updates DDL file onto node 1:
 
 ```bash
-docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true < config/media_store.sql
+docker compose -f docker/docker-compose.yaml cp docker/sql/media_store.sql node1:/tmp
+```
+
+And then using the sqlline "run" command to execute the SQL:
+
+```bash
+echo '!run /tmp/media_store.sql' | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true
 ```
 
 Run the join again without `distributedJoins`:

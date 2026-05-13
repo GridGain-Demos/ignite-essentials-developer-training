@@ -28,7 +28,6 @@ services:
       - ./libs:/opt/gridgain/libs/user_libs:ro
       - ./gridgain-license.xml:/opt/gridgain/gridgain-license.xml
       - ./data/node1:/opt/gridgain/work
-      - ./sql/media_store.sql:/tmp/media_store.sql
 
   node2:
     <<: *gg-node
