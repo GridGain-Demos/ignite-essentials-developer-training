@@ -28,7 +28,7 @@ import org.apache.ignite.configuration.ClientConfiguration;
  * calculate the top-N paying customers. The real work happens in
  * training.compute.TopPayingCustomersTask.
  *
- * Update the task implementation to return the top-10 paying customers.
+ * Exercise: change customersCount below from 5 to 10 to see the top-10 paying customers.
  */
 public class ComputeApp {
 

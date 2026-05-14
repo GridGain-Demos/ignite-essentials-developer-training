@@ -24,6 +24,7 @@ During the live training you exercise a three-node GG8 cluster running in Docker
 
 - Git
 - Docker Desktop
+- A bash-compatible terminal (Git Bash on Windows, or any macOS / Linux terminal)
 - Your favorite IDE (IntelliJ, Eclipse, VS Code, or a plain editor)
 
 JDK 17 and Maven are optional — the `app` sidecar provides both. Install JDK 17 locally only if you use the standalone paths.
@@ -46,9 +47,11 @@ docker/
   │  node2/log/           ← node2 log files
   │  node3/log/           ← node3 log files
   libs/                   ← server-tasks.jar lands here after a build;
-                             nodes load it from this directory at startup
+  │                          nodes load it from this directory at startup
+  sql/                    ← media_store.sql DDL script (schema + data)
 libs/                     ← apps.jar lands here after a build;
                              run KeyValueApp and ComputeApp from this jar
+sql/                      ← query SQL files used in section 4
 src/                      ← training source — edit these for the exercises
 ```
 
@@ -81,6 +84,11 @@ Verify all three nodes joined:
 docker compose -f docker/docker-compose.yaml logs node1 | grep "Topology snapshot" | tail -1
 ```
 
+**PowerShell:**
+```powershell
+docker compose -f docker/docker-compose.yaml logs node1 | Select-String "Topology snapshot" | Select-Object -Last 1
+```
+
 Expect `servers=3` in the output.
 
 ---
@@ -93,16 +101,28 @@ Inspect the DDL script and then copy it onto one of the nodes:
 docker compose -f docker/docker-compose.yaml cp docker/sql/media_store.sql node1:/tmp
 ```
 
-Use sqllines "run" command to execute the SQL script:
+Use SQLLine's "run" command to execute the SQL script:
 
 ```bash
 echo '!run /tmp/media_store.sql' | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true
+```
+
+**PowerShell:**
+```powershell
+cmd /c "echo !run /tmp/media_store.sql | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true"
 ```
 
 Verify row counts:
 
 ```bash
 printf 'SELECT COUNT(*) FROM Artist;\nSELECT COUNT(*) FROM Customer;\n!quit\n' | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true
+```
+
+**PowerShell:**
+```powershell
+"SELECT COUNT(*) FROM Artist;", "SELECT COUNT(*) FROM Customer;", "!quit" | Out-File -Encoding ascii verify.sql
+cmd /c "docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true < verify.sql"
+Remove-Item verify.sql
 ```
 
 Expect **275** artists and **59** customers.
@@ -121,12 +141,22 @@ Run the top-20 longest tracks against a single cache:
 docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true < sql/top_20_longest_tracks.sql
 ```
 
+**PowerShell:**
+```powershell
+cmd /c "docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true < sql/top_20_longest_tracks.sql"
+```
+
 ### Joining non-colocated tables
 
 `Track` and `Artist` are partitioned independently — their records land on different nodes. Run the join without any hint:
 
 ```bash
 docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true < sql/top_20_longest_tracks_with_authors.sql
+```
+
+**PowerShell:**
+```powershell
+cmd /c "docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true < sql/top_20_longest_tracks_with_authors.sql"
 ```
 
 The `artist` column will be blank for many rows — each node can only see the Track records it holds locally, not the Artist records on other nodes.
@@ -137,11 +167,16 @@ Enable distributed joins to get complete results (Ignite shuffles data across no
 docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/?distributedJoins=true" --silent=true < sql/top_20_longest_tracks_with_authors.sql
 ```
 
+**PowerShell:**
+```powershell
+cmd /c "docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/?distributedJoins=true"" --silent=true < sql/top_20_longest_tracks_with_authors.sql"
+```
+
 All `artist` values are now filled in.
 
 ### Fixing with affinity co-location
 
-The proper solution is to store each Track on the same node as its Artist. Edit `config/media_store.sql`, find the `CREATE TABLE Track` statement, and make two changes:
+The proper solution is to store each Track on the same node as its Artist. Edit `docker/sql/media_store.sql`, find the `CREATE TABLE Track` statement, and make two changes:
 
 1. Change `PRIMARY KEY (TrackId)` → `PRIMARY KEY (TrackId, ArtistId)`
 2. Add `affinityKey=ArtistId` to the `WITH` clause
@@ -152,26 +187,46 @@ The proper solution is to store each Track on the same node as its Artist. Edit 
 echo "y" | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/control.sh --meta remove --typeName training.model.TrackKey
 ```
 
+**PowerShell:**
+```powershell
+cmd /c "echo y | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/control.sh --meta remove --typeName training.model.TrackKey"
+```
+
 ```bash
 echo "y" | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/control.sh --meta remove --typeName training.model.Track
 ```
 
-Now reload the schema by copying the updates DDL file onto node 1:
+**PowerShell:**
+```powershell
+cmd /c "echo y | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/control.sh --meta remove --typeName training.model.Track"
+```
+
+Now reload the schema by copying the updated DDL file onto node 1:
 
 ```bash
 docker compose -f docker/docker-compose.yaml cp docker/sql/media_store.sql node1:/tmp
 ```
 
-And then using the sqlline "run" command to execute the SQL:
+And then using the SQLLine "run" command to execute the SQL:
 
 ```bash
 echo '!run /tmp/media_store.sql' | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true
+```
+
+**PowerShell:**
+```powershell
+cmd /c "echo !run /tmp/media_store.sql | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true"
 ```
 
 Run the join again without `distributedJoins`:
 
 ```bash
 docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true < sql/top_20_longest_tracks_with_authors.sql
+```
+
+**PowerShell:**
+```powershell
+cmd /c "docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true < sql/top_20_longest_tracks_with_authors.sql"
 ```
 
 All `artist` values are filled in — and no cross-node data shuffling was needed.
@@ -206,10 +261,19 @@ docker compose -f docker/docker-compose.yaml run --rm app mvn -B clean package -
 docker compose -f docker/docker-compose.yaml up -d
 ```
 
-Verify all three nodes rejoined:
+The cluster runs in-memory, so the restart loses all data. Reload the schema before continuing with sections 6–7 (same steps as [section 3](#3-load-the-media-store-schema)):
 
 ```bash
-docker compose -f docker/docker-compose.yaml logs node1 | grep "Topology snapshot" | tail -1
+docker compose -f docker/docker-compose.yaml cp docker/sql/media_store.sql node1:/tmp
+```
+
+```bash
+echo '!run /tmp/media_store.sql' | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true
+```
+
+**PowerShell:**
+```powershell
+cmd /c "echo !run /tmp/media_store.sql | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true"
 ```
 
 ### Build output
@@ -253,7 +317,7 @@ Expect 99 artists printed, including "Jimi Hendrix", "Joe Satriani", "Legião Ur
 
 ## 7. ComputeApp — Distributed Compute
 
-`ComputeApp` triggers `TopPayingCustomersTask`, a server-deployed compute task that runs on every cluster node in parallel. Each node scans its local `InvoiceLine` records, aggregates per-customer totals, and returns its top-N; the thin client merges all partial results. The local scan is correct because `InvoiceLine` is co-located with `Customer` by `CustomerId` (`affinityKey=CustomerId` in `config/media_store.sql`) — the same affinity principle demonstrated with Track/Artist in section 4.
+`ComputeApp` triggers `TopPayingCustomersTask`, a server-deployed compute task that runs on every cluster node in parallel. Each node scans its local `InvoiceLine` records, aggregates per-customer totals, and returns its top-N; the thin client merges all partial results. The local scan is correct because `InvoiceLine` is co-located with `Customer` by `CustomerId` (`affinityKey=CustomerId` in `docker/sql/media_store.sql`) — the same affinity principle demonstrated with Track/Artist in section 4.
 
 **Standalone:**
 
@@ -275,8 +339,8 @@ Expect output similar to:
 TopCustomer{customerId=6, fullName='Helena Holý', ...}
 TopCustomer{customerId=26, fullName='Richard Cunningham', ...}
 TopCustomer{customerId=57, fullName='Luis Rojas', ...}
-TopCustomer{customerId=45, fullName='Hugh O'Reilly', ...}
-TopCustomer{customerId=144, fullName='Ladislav Kovács', ...}
+TopCustomer{customerId=46, fullName='Hugh O''Reilly', ...}
+TopCustomer{customerId=45, fullName='Ladislav Kovács', ...}
 ```
 
 Docker output shows `Connected to node1:10800` instead of `localhost:10800`.
@@ -287,11 +351,16 @@ To confirm the task ran on every node (not just one), check the cluster logs:
 docker compose -f docker/docker-compose.yaml logs node1 node2 node3 | grep "Task locally deployed: class training"
 ```
 
+**PowerShell:**
+```powershell
+docker compose -f docker/docker-compose.yaml logs node1 node2 node3 | Select-String "Task locally deployed: class training"
+```
+
 Expect three matching lines — one per node — each showing `Task locally deployed: class training.compute.TopPayingCustomersTask`.
 
-### Modify the task
+### Modify the client argument
 
-Update `src/main/java/training/ComputeApp.java`: change `int customersCount = 5` to `int customersCount = 10`. The task receives this value as its argument, so no cluster restart is needed — only `apps.jar` changes. Rebuild:
+Update `src/main/java/training/ComputeApp.java`: change `int customersCount = 5` to `int customersCount = 10`. The value is passed as an argument to the server task at invocation time, so `server-tasks.jar` is unchanged and the cluster does not need to restart — only `apps.jar` needs to be rebuilt:
 
 **Standalone:**
 
@@ -300,6 +369,8 @@ mvn clean package -P apps
 ```
 
 **Docker:**
+
+Although `server-tasks.jar` is unchanged, the cluster must still be brought down before the sidecar build because Docker Desktop holds a lock on bind-mounted directories while containers are running. The down/up cycle loses all in-memory data, so you will need to reload the schema afterwards:
 
 ```bash
 docker compose -f docker/docker-compose.yaml down
@@ -313,13 +384,22 @@ docker compose -f docker/docker-compose.yaml run --rm app mvn -B clean package -
 docker compose -f docker/docker-compose.yaml up -d
 ```
 
-Verify all three nodes rejoined:
+Reload the schema before continuing (same steps as [section 3](#3-load-the-media-store-schema)):
 
 ```bash
-docker compose -f docker/docker-compose.yaml logs node1 | grep "Topology snapshot" | tail -1
+docker compose -f docker/docker-compose.yaml cp docker/sql/media_store.sql node1:/tmp
 ```
 
-Run `ComputeApp` again — the output now shows 10 customers.
+```bash
+echo '!run /tmp/media_store.sql' | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true
+```
+
+**PowerShell:**
+```powershell
+cmd /c "echo !run /tmp/media_store.sql | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true"
+```
+
+Run `ComputeApp` again (use the same command from [above](#7-computeapp--distributed-compute)) — the output now shows 10 customers.
 
 ---
 
@@ -329,7 +409,9 @@ Run `ComputeApp` again — the output now shows 10 customers.
 docker compose -f docker/docker-compose.yaml down
 ```
 
-The `docker/data/` directory is kept on the host (holds logs and marshaller metadata; only gains `db/` and `wal/` subdirectories when persistence is enabled).
+The cluster runs in-memory — all data is lost when the nodes stop. If you restart the cluster, reload the schema by re-running the steps from [section 3](#3-load-the-media-store-schema).
+
+The `docker/data/` directory is kept on the host (holds logs; `db/marshaller/` is always created for binary type metadata, while `db/wal/` only appears when persistence is enabled).
 
 ---
 
@@ -337,11 +419,12 @@ The `docker/data/` directory is kept on the host (holds logs and marshaller meta
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `docker compose up -d` hangs on the second attempt | Port 10800 still held by a cluster running in another directory | `docker compose -f docker/docker-compose.yaml down` in that directory first |
+| `docker compose -f docker/docker-compose.yaml up -d` hangs on the second attempt | Port 10800 still held by a cluster running in another directory | `docker compose -f docker/docker-compose.yaml down` in that directory first |
 | Nodes start but produce no logs; `docker/data/` empty (Linux only) | Container runs as UID 10000; host `docker/data/` owned by your user | `chown -R 10000:10000 docker/data/` |
 | `InaccessibleObjectException: Unable to make field long java.nio.Buffer.address accessible` | Missing `@src/main/resources/j17.params` before `-cp` | Add the `@` argfile argument |
 | Sidecar: `Connection refused` to thin client | `IGNITE_ADDRESS` env var not set or compose service using `localhost` | Check `environment:` block in `docker/docker-compose.yaml` sets `IGNITE_ADDRESS=node1:10800` |
 | `ComputeApp`: `Compute grid functionality is disabled for thin clients` | `ThinClientConfiguration.maxActiveComputeTasksPerConnection=0` on the server | Check `docker/config/training-node-config.xml` has the override set to 100 |
 | `ComputeApp`: `Unknown task name or failed to auto-deploy task: TopPayingCustomersTask` even after cluster restart | Wrong cluster is running — another training's cluster has no `server-tasks.jar` | Run `docker inspect <node1-container-id> --format '{{range .Mounts}}{{.Source}}{{println}}{{end}}'` to confirm which `docker/libs` is mounted; bring down the wrong cluster first |
-| Sidecar build: `Error assembling JAR: Problem creating output file` | Docker Desktop for Windows blocks writes to host directories currently bind-mounted in running containers | Bring the cluster down before building (`docker compose down`), then bring it back up after |
-| Schema reload fails with `Binary type has different affinity key fields` for `TrackKey` | `DROP TABLE` removes the cache but not binary type metadata; stale affinity key registration conflicts with the new one | Run `echo "y" \| docker compose exec -T node1 /opt/gridgain/bin/control.sh --meta remove --typeName training.model.TrackKey` and the same for `training.model.Track`, then reload. If the cluster was restarted, also clear `docker/data/node{1,2,3}/marshaller/` first. |
+| Sidecar build: `Error assembling JAR: Problem creating output file` | Docker Desktop for Windows blocks writes to host directories currently bind-mounted in running containers | Bring the cluster down before building (`docker compose -f docker/docker-compose.yaml down`), then bring it back up after |
+| Schema reload fails with `Binary type has different affinity key fields` for `TrackKey` | `DROP TABLE` removes the cache but not binary type metadata; stale affinity key registration conflicts with the new one | Run `echo "y" \| docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/control.sh --meta remove --typeName training.model.TrackKey` and the same for `training.model.Track`, then reload. If the cluster was restarted, also clear `docker/data/node{1,2,3}/marshaller/` first. |
+| Git Bash on Windows: sidecar `java @/work/...` fails with a mangled path | MSYS path translation converts `/work/...` to a Windows path | Prefix the command with `MSYS_NO_PATHCONV=1`, e.g. `MSYS_NO_PATHCONV=1 docker compose ... run --rm app java @/work/...` |

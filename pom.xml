@@ -48,7 +48,7 @@
               libs/apps.jar              — shaded fat jar for KeyValueApp and ComputeApp
               docker/libs/server-tasks.jar — task + model classes only; no ignite-core
                                             (the server image already has it)
-            Changing the task class requires `docker compose restart` so nodes reload it.
+            Changing the task class requires `docker compose down` then `docker compose up -d` so nodes reload it.
         -->
         <profile>
             <id>apps</id>

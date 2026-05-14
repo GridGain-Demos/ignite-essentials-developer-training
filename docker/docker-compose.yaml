@@ -1,4 +1,4 @@
-# Reference training cluster for GridGain Community (GG8).
+# Reference training cluster for GridGain Enterprise Edition (GG8).
 #
 # Per-node state:
 #   - Each node's work dir is bind-mounted at ./data/nodeN/ on the

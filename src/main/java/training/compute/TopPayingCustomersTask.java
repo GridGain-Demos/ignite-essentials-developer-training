@@ -48,13 +48,13 @@ import org.apache.ignite.resources.IgniteInstanceResource;
  * That directory is bind-mounted into every server container as
  * /opt/gridgain/libs/user_libs/ (see docker-compose.yaml), where the
  * GridGain image loads every jar at startup. Rebuilding the jar requires
- * `docker compose restart` to take effect.
+ * `docker compose down` then `docker compose up -d` to take effect.
  *
  * Per-node job (LocalTopJob): scans the node's LOCAL slice of the
  * InvoiceLine cache, aggregates per customer, returns its top-N.
  * A local scan is correct here because InvoiceLine rows are co-located
  * with their Customer row by customerId (affinityKey=CustomerId in
- * config/media_store.sql, mirrored by @AffinityKeyMapped in InvoiceLineKey.java).
+ * docker/sql/media_store.sql, mirrored by @AffinityKeyMapped in InvoiceLineKey.java).
  */
 public class TopPayingCustomersTask extends ComputeTaskAdapter<Integer, TreeSet<TopCustomer>> {
 
