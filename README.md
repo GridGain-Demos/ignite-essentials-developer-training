@@ -101,15 +101,15 @@ Inspect the DDL script and then copy it onto one of the nodes:
 docker compose -f docker/docker-compose.yaml cp docker/sql/media_store.sql node1:/tmp
 ```
 
-Use SQLLine's "run" command to execute the SQL script:
+Use SQLLine to execute the SQL script:
 
 ```bash
-echo '!run /tmp/media_store.sql' | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true
+docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true -f /tmp/media_store.sql
 ```
 
 **PowerShell:**
 ```powershell
-cmd /c "echo !run /tmp/media_store.sql | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true"
+cmd /c "docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true -f /tmp/media_store.sql"
 ```
 
 Verify row counts:
@@ -207,15 +207,15 @@ Now reload the schema by copying the updated DDL file onto node 1:
 docker compose -f docker/docker-compose.yaml cp docker/sql/media_store.sql node1:/tmp
 ```
 
-And then using the SQLLine "run" command to execute the SQL:
+And then use SQLLine to execute the SQL:
 
 ```bash
-echo '!run /tmp/media_store.sql' | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true
+docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true -f /tmp/media_store.sql
 ```
 
 **PowerShell:**
 ```powershell
-cmd /c "echo !run /tmp/media_store.sql | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true"
+cmd /c "docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true -f /tmp/media_store.sql"
 ```
 
 Run the join again without `distributedJoins`:
