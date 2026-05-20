@@ -290,12 +290,12 @@ docker compose -f docker/docker-compose.yaml cp docker/sql/media_store.sql node1
 **Bash:**
 
 ```bash
-echo '!run /tmp/media_store.sql' | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true
+docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true -f /tmp/media_store.sql
 ```
 
 **PowerShell:**
 ```powershell
-cmd /c "echo !run /tmp/media_store.sql | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true"
+cmd /c "docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true -f /tmp/media_store.sql"
 ```
 
 ### Build output
@@ -417,12 +417,12 @@ docker compose -f docker/docker-compose.yaml cp docker/sql/media_store.sql node1
 **Bash:**
 
 ```bash
-echo '!run /tmp/media_store.sql' | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true
+docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true -f /tmp/media_store.sql
 ```
 
 **PowerShell:**
 ```powershell
-cmd /c "echo !run /tmp/media_store.sql | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true"
+cmd /c "docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true -f /tmp/media_store.sql"
 ```
 
 Run `ComputeApp` again (use the same command from [above](#7-computeapp--distributed-compute)) — the output now shows 10 customers.
