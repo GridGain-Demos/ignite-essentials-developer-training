@@ -80,6 +80,8 @@ docker compose -f docker/docker-compose.yaml up -d
 
 Verify all three nodes joined:
 
+**Bash:**
+
 ```bash
 docker compose -f docker/docker-compose.yaml logs node1 | grep "Topology snapshot" | tail -1
 ```
@@ -103,6 +105,8 @@ docker compose -f docker/docker-compose.yaml cp docker/sql/media_store.sql node1
 
 Use SQLLine to execute the SQL script:
 
+**Bash:**
+
 ```bash
 docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true -f /tmp/media_store.sql
 ```
@@ -113,6 +117,8 @@ cmd /c "docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain
 ```
 
 Verify row counts:
+
+**Bash:**
 
 ```bash
 printf 'SELECT COUNT(*) FROM Artist;\nSELECT COUNT(*) FROM Customer;\n!quit\n' | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true
@@ -137,6 +143,8 @@ Ignite supports distributed SQL including joins across partitioned caches. This 
 
 Run the top-20 longest tracks against a single cache:
 
+**Bash:**
+
 ```bash
 docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true < sql/top_20_longest_tracks.sql
 ```
@@ -150,6 +158,8 @@ cmd /c "docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain
 
 `Track` and `Artist` are partitioned independently — their records land on different nodes. Run the join without any hint:
 
+**Bash:**
+
 ```bash
 docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true < sql/top_20_longest_tracks_with_authors.sql
 ```
@@ -162,6 +172,8 @@ cmd /c "docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain
 The `artist` column will be blank for many rows — each node can only see the Track records it holds locally, not the Artist records on other nodes.
 
 Enable distributed joins to get complete results (Ignite shuffles data across nodes during the join phase — correct but expensive):
+
+**Bash:**
 
 ```bash
 docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/?distributedJoins=true" --silent=true < sql/top_20_longest_tracks_with_authors.sql
@@ -183,6 +195,8 @@ The proper solution is to store each Track on the same node as its Artist. Edit 
 
 `DROP TABLE IF EXISTS` removes the cache but not the binary type metadata. Remove the stale metadata for both types before reloading, otherwise the INSERT streaming will fail with a metadata conflict:
 
+**Bash:**
+
 ```bash
 echo "y" | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/control.sh --meta remove --typeName training.model.TrackKey
 ```
@@ -191,6 +205,8 @@ echo "y" | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridg
 ```powershell
 cmd /c "echo y | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/control.sh --meta remove --typeName training.model.TrackKey"
 ```
+
+**Bash:**
 
 ```bash
 echo "y" | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/control.sh --meta remove --typeName training.model.Track
@@ -209,6 +225,8 @@ docker compose -f docker/docker-compose.yaml cp docker/sql/media_store.sql node1
 
 And then use SQLLine to execute the SQL:
 
+**Bash:**
+
 ```bash
 docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true -f /tmp/media_store.sql
 ```
@@ -219,6 +237,8 @@ cmd /c "docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain
 ```
 
 Run the join again without `distributedJoins`:
+
+**Bash:**
 
 ```bash
 docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true < sql/top_20_longest_tracks_with_authors.sql
@@ -266,6 +286,8 @@ The cluster runs in-memory, so the restart loses all data. Reload the schema bef
 ```bash
 docker compose -f docker/docker-compose.yaml cp docker/sql/media_store.sql node1:/tmp
 ```
+
+**Bash:**
 
 ```bash
 echo '!run /tmp/media_store.sql' | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true
@@ -347,6 +369,8 @@ Docker output shows `Connected to node1:10800` instead of `localhost:10800`.
 
 To confirm the task ran on every node (not just one), check the cluster logs:
 
+**Bash:**
+
 ```bash
 docker compose -f docker/docker-compose.yaml logs node1 node2 node3 | grep "Task locally deployed: class training"
 ```
@@ -389,6 +413,8 @@ Reload the schema before continuing (same steps as [section 3](#3-load-the-media
 ```bash
 docker compose -f docker/docker-compose.yaml cp docker/sql/media_store.sql node1:/tmp
 ```
+
+**Bash:**
 
 ```bash
 echo '!run /tmp/media_store.sql' | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true
