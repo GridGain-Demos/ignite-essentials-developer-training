@@ -255,7 +255,7 @@ All `artist` values are filled in — and no cross-node data shuffling was neede
 
 ## 5. Build the Training Apps
 
-Two paths — pick whichever suits your environment.
+Two paths — pick whichever suits your environment. The sidecar path requires no local SDK; the standalone path gives you IDE debugging and faster iteration.
 
 ### Standalone (host Maven)
 
