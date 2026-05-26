@@ -1,218 +1,456 @@
-# [Foundation Course] Apache Ignite Essentials: Key Design Principles for Building Data-Intensive Applications
+# Apache Ignite Essentials — Developer Training
 
-This project is designed for a free instructor-led training on the Ignite essential capabilities and architecture internals.
-Check [the complete schedule](https://www.gridgain.com/products/services/training/apache-ignite-workshop-Key-design-principles-for-building-data-intensive-applications) and join one of our upcoming training sessions.
+A free instructor-led training on GridGain / Apache Ignite essential capabilities and architecture internals. Check the [complete schedule](https://www.gridgain.com/products/services/training/apache-ignite-workshop-Key-design-principles-for-building-data-intensive-applications) and join an upcoming session.
 
-## Setting Up Environment
+During the live training you exercise a three-node GG8 cluster running in Docker, reading and computing over a Media Store dataset with two thin-client apps — `KeyValueApp` (partition / affinity exploration) and `ComputeApp` (a distributed compute task deployed server-side).
 
-* GridGain license file. Instructions will be emailed when you register, but, in short, grab your key [here](https://www.gridgain.com/tryfree)
-* Docker and Docker Compose installed on your system
-* Basic familiarity with command-line operations
-* Java 11, 17 or 21 (for connecting to the cluster)
-* Maven
-* (An IDE such as IntelliJ will make things a lot easier but is not strictly necessary)
+## Table of Contents
 
-## Clone The Project
+- [Prerequisites](#prerequisites)
+- [Project Layout](#project-layout)
+- [1. Clone the Project](#1-clone-the-project)
+- [2. Start the Cluster](#2-start-the-cluster)
+- [3. Load the Media Store Schema](#3-load-the-media-store-schema)
+- [4. Affinity Co-location — SQL Joins](#4-affinity-co-location--sql-joins)
+- [5. Build the Training Apps](#5-build-the-training-apps)
+- [6. KeyValueApp — Partition Distribution](#6-keyvalueapp--partition-distribution)
+- [7. ComputeApp — Distributed Compute](#7-computeapp--distributed-compute)
+- [8. Shutdown](#8-shutdown)
+- [Troubleshooting](#troubleshooting)
 
-1. Clone the training project with Git or download it as an archive:
+---
 
-    ```bash
-    git clone https://github.com/GridGain-Demos/ignite-essentials-developer-training.git
-    ```
+## Prerequisites
 
-2. (optionally), open the project in your favourite IDE such as IntelliJ or Eclipse, or just use a simple text editor
-and command-line instructions prepared for all the samples.
+- Git
+- Docker Desktop
+- A terminal — PowerShell on Windows, or any macOS / Linux terminal. Git Bash also works (see [Troubleshooting](#troubleshooting) for an MSYS path caveat)
+- Your favorite IDE (IntelliJ, Eclipse, VS Code, or a plain editor)
 
-## Sign up for GridGain's Nebula service
+JDK 17 and Maven are optional — the `app` sidecar provides both. Install JDK 17 locally only if you use the standalone paths.
 
-We'll use the Control Center component to execute SQL queries and view cluster internals.
+**Linux only:** the GridGain container image runs as UID 10000. If nodes fail to start on Linux, run `chown -R 10000:10000 docker/data/` and retry.
 
-1. Open portal.gridgain.com in your browser
-2. Click the "Sign up" button
-3. Enter your details
+---
 
-## Starting Ignite Cluster
+## Project Layout
 
-Start a Three-node Ignite cluster:
+Three GridGain nodes (`node1`, `node2`, `node3`) run on an isolated Docker bridge network. Only `node1` publishes port `10800` to the host — that is the thin-client address your apps connect to. The `app` service is a Maven 3.9 + JDK 17 sidecar: it shares the project directory via a bind mount, so you can build and run the training apps without installing Maven locally, and any edit you make in your IDE is picked up by the next `docker compose run` immediately.
 
-1. Open a terminal window and navigate to the root directory of this project.
-
-2. Open `src/main/resources/controlcenter.conf` in your IDE or text editor
-
-3. Update the `connector.username` and `connector.password` values to the values you used to create your Nebula account.
-
-4. Start your nodes using Docker Compose:
-
-    ```bash
-   docker compose up -d
-   ```
-
-5. Switch back to your browser and select `Attach GridGain`
-6. In the "Connector" dropdown, select `Ignite Essentials`
-7. The `URL of the REST API` is `http://node1:10300`
-8. Click `Continue`
-9. Click `Attach`
-10. Initialize the cluster by clicking the `Initialize` button at the top-right of the screen. Drop in your license file as suggested
-
-## Creating Media Store Schema and Loading Data
-
-Now you need to create a Media Store schema and load the cluster with sample data. Use SQLLine tool to achieve that:
-
-1. Open a terminal window and navigate to the root directory of this project.
-2. Load the media store database:
-
-	a. Start the Command Line Interface (CLI)
-
-    ```bash
-   docker run -v ./config/media_store.sql:/opt/gridgain/downloads/media_store.sql --rm --network ignite3_default -it gridgain/gridgain9:9.1.8-openjdk21 cli
-   ```
-
-   b. Connect to the cluster.
-
-   ```bash
-   connect http://node1:10300
-   ```
-
-   c. Execute SQL command to load the sample data.
-
-   ```bash
-   sql --file=/opt/gridgain/downloads/media_store.sql
-    ```
-
-Keep the connection open as you'll use it for following exercises.
-
-## Data Partitioning - Checking Data Distribution
-
-With the Media Store database loaded, you can check how Ignite distributed the records within the cluster:
-
-1. Switch to your browser and select the "Tables" tab
-2. While on that screen, follow the instructor to learn some insights.
-
-## Affinity Co-location - Optimizing Complex SQL Queries With JOINs
-
-Ignite supports SQL for data processing including distributed joins, grouping and sorting. In this section, you're
-going to run basic SQL operations as well as more advanced ones.
-
-### Querying Single Table
-
-1. In your browser, select the "Queries" tab
-
-2. Run the following query to find top-20 longest tracks:
-
-    ```sql
-    SELECT trackid, name, MAX(milliseconds / (1000 * 60)) as duration FROM track
-    WHERE genreId < 17
-    GROUP BY trackid, name ORDER BY duration DESC LIMIT 20;
-    ```
-
-### Joining Two Colocated Tables
-
-1. Modify the previous query by adding information about an author. You do this by doing a LEFT
-JOIN with the `Artist` table:
-
-    ```sql
-   SELECT track.trackId, track.name as track_name, genre.name as genre, artist.name as artist,
-   MAX(milliseconds / (1000 * 60)) as duration FROM track
-   LEFT JOIN artist ON track.artistId = artist.artistId
-   JOIN genre ON track.genreId = genre.genreId
-   WHERE track.genreId < 17
-   GROUP BY track.trackId, track.name, genre.name, artist.name ORDER BY duration DESC LIMIT 20;
-   ```
-
-2. Try adding the phrase "EXPLAIN PLAN FOR" at the beginning of the above query to see how Ignite will execute it.
-3. Examine the output. Your instructor will give hints for what to look for. It will look something like this:
-
-	```bash
-	Sort
-		collation: [DURATION DESC]
-		fetch: 20
-		est: (rows=1)
-	  ColocatedHashAggregate
-		  fieldNames: [TRACKID, TRACK_NAME, GENRE, ARTIST, DURATION]
-		  group: [TRACKID, TRACK_NAME, GENRE, ARTIST]
-		  aggregation: [MAX($f4)]
-		  est: (rows=1)
-		Project
-			fieldNames: [TRACKID, TRACK_NAME, GENRE, ARTIST, $f4]
-			projection: [TRACKID, NAME, NAME$1, NAME$0, /(MILLISECONDS, *(1000, 60))]
-			est: (rows=1)
-		  HashJoin
-			  predicate: =(GENREID, GENREID$0)
-			  fieldNames: [TRACKID, NAME, ARTISTID, GENREID, MILLISECONDS, ARTISTID$0, NAME$0, GENREID$0, NAME$1]
-			  type: inner
-			  est: (rows=1)
-			Exchange
-				distribution: single
-				est: (rows=1)
-			  HashJoin
-				  predicate: =(ARTISTID, ARTISTID$0)
-				  fieldNames: [TRACKID, NAME, ARTISTID, GENREID, MILLISECONDS, ARTISTID$0, NAME$0]
-				  type: left
-				  est: (rows=1)
-				TableScan
-					table: PUBLIC.TRACK
-					predicate: <(GENREID, 17)
-					fieldNames: [TRACKID, NAME, ARTISTID, GENREID, MILLISECONDS]
-					est: (rows=1)
-				TableScan
-					table: PUBLIC.ARTIST
-					fieldNames: [ARTISTID, NAME]
-					est: (rows=1)
-			Exchange
-				distribution: single
-				est: (rows=1)
-			  TableScan
-				  table: PUBLIC.GENRE
-				  fieldNames: [GENREID, NAME]
-				  est: (rows=1)
-	```
-
-## Running Co-located Compute Tasks
-
-Run `training.ComputeApp` that uses Apache Ignite compute capabilities for a calculation of top-5 paying customers.
-The compute task executes on every cluster node, iterates through local records and responds to the application that
-merges partial results.
-
-1. Build an executable JAR with the applications' classes (or just start the app with IntelliJ IDEA or Eclipse):
-
-    ```bash
-    mvn clean package
-    ```
-2. Load the code into your cluster:
-
-	a. Start the CLI.
-
-    ```bash
-   docker run -v ./target/ignite-essentials-developer-training-1.0-SNAPSHOT.jar:/opt/gridgain/downloads/ignite-essentials-developer-training-1.0-SNAPSHOT.jar --rm --network ignite3_default -it gridgain/gridgain9:9.1.8-openjdk21 cli
-   ```
-
-	b. Connect to the cluster.
-
-	```bash
-   connect http://node1:10300
-   ```
-
-   c. Deploy the code to the cluster.
-
-   ```bash
-   cluster unit deploy --version 1.0.0 --path=/opt/gridgain/downloads/ignite-essentials-developer-training-1.0-SNAPSHOT.jar essentialsCompute
-    ```
-
-    It's also possible to use Control Center to deploy your code if you prefer. Study the "Deployment" tab to find out more.
-3. Execute the `ComputeApp` program with the following command:
-
-```shell
-mvn exec:java
+```
+docker/
+  docker-compose.yaml     ← full topology rationale and mount details live here
+  config/                 ← training-node-config.xml + ignite-log4j2.xml,
+  │                          bind-mounted read-only into every server node
+  data/
+  │  node1/log/           ← node1 log files on the host (also via `docker compose logs node1`)
+  │  node2/log/           ← node2 log files
+  │  node3/log/           ← node3 log files
+  libs/                   ← server-tasks.jar lands here after a build;
+  │                          nodes load it from this directory at startup
+  sql/                    ← media_store.sql DDL script (schema + data)
+libs/                     ← apps.jar lands here after a build;
+                             run KeyValueApp and ComputeApp from this jar
+sql/                      ← query SQL files used in section 4
+src/                      ← training source — edit these for the exercises
 ```
 
-Or run directly from your preferred IDE.
+The sidecar build writes to `docker/libs/` while the server nodes have that directory bind-mounted. Docker Desktop holds a lock on bind-mounted directories while containers are running, so **always bring the cluster down before a sidecar build** and back up after.
 
-4. Edit `ComputeApp` and change the number of customers to return from 5 to 10. There's no need to redeploy the compute job because only the caller needs to change.
+---
 
-## Tidying up
+## 1. Clone the Project
 
-When you've finished with the exercises, you can shut down the cluster and clean up with the following command:
-
-```shell
-docker compose down
+```bash
+git clone -b gg8_docker https://github.com/GridGain-Demos/ignite-essentials-developer-training.git
+cd ignite-essentials-developer-training
 ```
+
+---
+
+## 2. Start the Cluster
+
+You should have received a license key a day or two before this session. Check your spam folder if you have not seen it yet. If you registered at the last minute, you can download a key from [our website](https://www.gridgain.com/tryfree).
+
+Copy your license key to the `docker` folder. Ensure it's called `gridgain-license.xml`.
+
+```bash
+docker compose -f docker/docker-compose.yaml up -d
+```
+
+Verify all three nodes joined:
+
+**Bash:**
+
+```bash
+docker compose -f docker/docker-compose.yaml logs node1 | grep "Topology snapshot" | tail -1
+```
+
+**PowerShell:**
+```powershell
+docker compose -f docker/docker-compose.yaml logs node1 | Select-String "Topology snapshot" | Select-Object -Last 1
+```
+
+Expect `servers=3` in the output.
+
+---
+
+## 3. Load the Media Store Schema
+
+Inspect the DDL script and then copy it onto one of the nodes:
+
+```bash
+docker compose -f docker/docker-compose.yaml cp docker/sql/media_store.sql node1:/tmp
+```
+
+Use SQLLine to execute the SQL script:
+
+**Bash:**
+
+```bash
+docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true -f /tmp/media_store.sql
+```
+
+**PowerShell:**
+```powershell
+cmd /c "docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true -f /tmp/media_store.sql"
+```
+
+Verify row counts:
+
+**Bash:**
+
+```bash
+printf 'SELECT COUNT(*) FROM Artist;\nSELECT COUNT(*) FROM Customer;\n!quit\n' | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true
+```
+
+**PowerShell:**
+```powershell
+"SELECT COUNT(*) FROM Artist;", "SELECT COUNT(*) FROM Customer;", "!quit" | Out-File -Encoding ascii verify.sql
+cmd /c "docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true < verify.sql"
+Remove-Item verify.sql
+```
+
+Expect **275** artists and **59** customers.
+
+---
+
+## 4. Affinity Co-location — SQL Joins
+
+Ignite supports distributed SQL including joins across partitioned caches. This section demonstrates why co-location matters and how to fix a non-colocated schema.
+
+### Single-table query
+
+Run the top-20 longest tracks against a single cache:
+
+**Bash:**
+
+```bash
+docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true < sql/top_20_longest_tracks.sql
+```
+
+**PowerShell:**
+```powershell
+cmd /c "docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true < sql/top_20_longest_tracks.sql"
+```
+
+### Joining non-colocated tables
+
+`Track` and `Artist` are partitioned independently — their records land on different nodes. Run the join without any hint:
+
+**Bash:**
+
+```bash
+docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true < sql/top_20_longest_tracks_with_authors.sql
+```
+
+**PowerShell:**
+```powershell
+cmd /c "docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true < sql/top_20_longest_tracks_with_authors.sql"
+```
+
+The `artist` column will be blank for many rows — each node can only see the Track records it holds locally, not the Artist records on other nodes.
+
+Enable distributed joins to get complete results (Ignite shuffles data across nodes during the join phase — correct but expensive):
+
+**Bash:**
+
+```bash
+docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/?distributedJoins=true" --silent=true < sql/top_20_longest_tracks_with_authors.sql
+```
+
+**PowerShell:**
+```powershell
+cmd /c "docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/?distributedJoins=true"" --silent=true < sql/top_20_longest_tracks_with_authors.sql"
+```
+
+All `artist` values are now filled in.
+
+### Fixing with affinity co-location
+
+The proper solution is to store each Track on the same node as its Artist. Edit `docker/sql/media_store.sql`, find the `CREATE TABLE Track` statement, and make two changes:
+
+1. Change `PRIMARY KEY (TrackId)` → `PRIMARY KEY (TrackId, ArtistId)`
+2. Add `affinityKey=ArtistId` to the `WITH` clause
+
+`DROP TABLE IF EXISTS` removes the cache but not the binary type metadata. Remove the stale metadata for both types before reloading, otherwise the INSERT streaming will fail with a metadata conflict:
+
+**Bash:**
+
+```bash
+echo "y" | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/control.sh --meta remove --typeName training.model.TrackKey
+```
+
+**PowerShell:**
+```powershell
+cmd /c "echo y | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/control.sh --meta remove --typeName training.model.TrackKey"
+```
+
+**Bash:**
+
+```bash
+echo "y" | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/control.sh --meta remove --typeName training.model.Track
+```
+
+**PowerShell:**
+```powershell
+cmd /c "echo y | docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/control.sh --meta remove --typeName training.model.Track"
+```
+
+Now reload the schema by copying the updated DDL file onto node 1:
+
+```bash
+docker compose -f docker/docker-compose.yaml cp docker/sql/media_store.sql node1:/tmp
+```
+
+And then use SQLLine to execute the SQL:
+
+**Bash:**
+
+```bash
+docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true -f /tmp/media_store.sql
+```
+
+**PowerShell:**
+```powershell
+cmd /c "docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true -f /tmp/media_store.sql"
+```
+
+Run the join again without `distributedJoins`:
+
+**Bash:**
+
+```bash
+docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true < sql/top_20_longest_tracks_with_authors.sql
+```
+
+**PowerShell:**
+```powershell
+cmd /c "docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true < sql/top_20_longest_tracks_with_authors.sql"
+```
+
+All `artist` values are filled in — and no cross-node data shuffling was needed.
+
+---
+
+## 5. Build the Training Apps
+
+Two paths — pick whichever suits your environment. The sidecar path requires no local SDK; the standalone path gives you IDE debugging and faster iteration.
+
+### Standalone (host Maven)
+
+The cluster can stay up during a host Maven build.
+
+```bash
+mvn clean package -P apps
+```
+
+### Docker
+
+Bring the cluster down before building — Docker Desktop blocks writes to bind-mounted directories while containers are running:
+
+```bash
+docker compose -f docker/docker-compose.yaml down
+```
+
+```bash
+docker compose -f docker/docker-compose.yaml run --rm app mvn -B clean package -P apps
+```
+
+```bash
+docker compose -f docker/docker-compose.yaml up -d
+```
+
+The cluster runs in-memory, so the restart loses all data. Reload the schema before continuing with sections 6–7 (same steps as [section 3](#3-load-the-media-store-schema)):
+
+```bash
+docker compose -f docker/docker-compose.yaml cp docker/sql/media_store.sql node1:/tmp
+```
+
+**Bash:**
+
+```bash
+docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true -f /tmp/media_store.sql
+```
+
+**PowerShell:**
+```powershell
+cmd /c "docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true -f /tmp/media_store.sql"
+```
+
+### Build output
+
+Both paths produce:
+
+- `libs/apps.jar` — shaded fat jar; run `KeyValueApp` and `ComputeApp` against it
+- `docker/libs/server-tasks.jar` — task classes only, no dependencies; loaded by each server node from its bind-mounted `/opt/gridgain/libs/user_libs/`
+
+**If `server-tasks.jar` changes**, the cluster must be restarted so each node reloads it from disk:
+
+```bash
+docker compose -f docker/docker-compose.yaml down
+```
+
+```bash
+docker compose -f docker/docker-compose.yaml up -d
+```
+
+---
+
+## 6. KeyValueApp — Partition Distribution
+
+`KeyValueApp` reads Artists 1–99 from the `Artist` cache via the thin client. Complete `TODO #1` in `src/main/java/training/KeyValueApp.java` to explore how Ignite distributes records across partitions and nodes.
+
+**Standalone:**
+
+```bash
+java @src/main/resources/j17.params -cp libs/apps.jar training.KeyValueApp
+```
+
+**Docker:**
+
+```bash
+docker compose -f docker/docker-compose.yaml run --rm app java @/work/src/main/resources/j17.params -cp /work/libs/apps.jar training.KeyValueApp
+```
+
+Expect 99 artists printed, including "Jimi Hendrix", "Joe Satriani", "Legião Urbana". Windows console may garble the UTF-8 characters — they are correct upstream.
+
+---
+
+## 7. ComputeApp — Distributed Compute
+
+`ComputeApp` triggers `TopPayingCustomersTask`, a server-deployed compute task that runs on every cluster node in parallel. Each node scans its local `InvoiceLine` records, aggregates per-customer totals, and returns its top-N; the thin client merges all partial results. The local scan is correct because `InvoiceLine` is co-located with `Customer` by `CustomerId` (`affinityKey=CustomerId` in `docker/sql/media_store.sql`) — the same affinity principle demonstrated with Track/Artist in section 4.
+
+**Standalone:**
+
+```bash
+java @src/main/resources/j17.params -cp libs/apps.jar training.ComputeApp
+```
+
+**Docker:**
+
+```bash
+docker compose -f docker/docker-compose.yaml run --rm app java @/work/src/main/resources/j17.params -cp /work/libs/apps.jar training.ComputeApp
+```
+
+Expect output similar to:
+
+```
+>>> Connected to localhost:10800
+>>> Top 5 Paying Listeners Across All Cluster Nodes
+TopCustomer{customerId=6, fullName='Helena Holý', ...}
+TopCustomer{customerId=26, fullName='Richard Cunningham', ...}
+TopCustomer{customerId=57, fullName='Luis Rojas', ...}
+TopCustomer{customerId=46, fullName='Hugh O''Reilly', ...}
+TopCustomer{customerId=45, fullName='Ladislav Kovács', ...}
+```
+
+Docker output shows `Connected to node1:10800` instead of `localhost:10800`.
+
+To confirm the task ran on every node (not just one), check the cluster logs:
+
+**Bash:**
+
+```bash
+docker compose -f docker/docker-compose.yaml logs node1 node2 node3 | grep "Task locally deployed: class training"
+```
+
+**PowerShell:**
+```powershell
+docker compose -f docker/docker-compose.yaml logs node1 node2 node3 | Select-String "Task locally deployed: class training"
+```
+
+Expect three matching lines — one per node — each showing `Task locally deployed: class training.compute.TopPayingCustomersTask`.
+
+### Modify the client argument
+
+Update `src/main/java/training/ComputeApp.java`: change `int customersCount = 5` to `int customersCount = 10`. The value is passed as an argument to the server task at invocation time, so `server-tasks.jar` is unchanged and the cluster does not need to restart — only `apps.jar` needs to be rebuilt:
+
+**Standalone:**
+
+```bash
+mvn clean package -P apps
+```
+
+**Docker:**
+
+Although `server-tasks.jar` is unchanged, the cluster must still be brought down before the sidecar build because Docker Desktop holds a lock on bind-mounted directories while containers are running. The down/up cycle loses all in-memory data, so you will need to reload the schema afterwards:
+
+```bash
+docker compose -f docker/docker-compose.yaml down
+```
+
+```bash
+docker compose -f docker/docker-compose.yaml run --rm app mvn -B clean package -P apps
+```
+
+```bash
+docker compose -f docker/docker-compose.yaml up -d
+```
+
+Reload the schema before continuing (same steps as [section 3](#3-load-the-media-store-schema)):
+
+```bash
+docker compose -f docker/docker-compose.yaml cp docker/sql/media_store.sql node1:/tmp
+```
+
+**Bash:**
+
+```bash
+docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u "jdbc:ignite:thin://127.0.0.1/" --silent=true -f /tmp/media_store.sql
+```
+
+**PowerShell:**
+```powershell
+cmd /c "docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/sqlline.sh -u ""jdbc:ignite:thin://127.0.0.1/"" --silent=true -f /tmp/media_store.sql"
+```
+
+Run `ComputeApp` again (use the same command from [above](#7-computeapp--distributed-compute)) — the output now shows 10 customers.
+
+---
+
+## 8. Shutdown
+
+```bash
+docker compose -f docker/docker-compose.yaml down
+```
+
+The cluster runs in-memory — all data is lost when the nodes stop. If you restart the cluster, reload the schema by re-running the steps from [section 3](#3-load-the-media-store-schema).
+
+The `docker/data/` directory is kept on the host (holds logs; `db/marshaller/` is always created for binary type metadata, while `db/wal/` only appears when persistence is enabled).
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `docker compose -f docker/docker-compose.yaml up -d` hangs on the second attempt | Port 10800 still held by a cluster running in another directory | `docker compose -f docker/docker-compose.yaml down` in that directory first |
+| Nodes start but produce no logs; `docker/data/` empty (Linux only) | Container runs as UID 10000; host `docker/data/` owned by your user | `chown -R 10000:10000 docker/data/` |
+| `InaccessibleObjectException: Unable to make field long java.nio.Buffer.address accessible` | Missing `@src/main/resources/j17.params` before `-cp` | Add the `@` argfile argument |
+| Sidecar: `Connection refused` to thin client | `IGNITE_ADDRESS` env var not set or compose service using `localhost` | Check `environment:` block in `docker/docker-compose.yaml` sets `IGNITE_ADDRESS=node1:10800` |
+| `ComputeApp`: `Compute grid functionality is disabled for thin clients` | `ThinClientConfiguration.maxActiveComputeTasksPerConnection=0` on the server | Check `docker/config/training-node-config.xml` has the override set to 100 |
+| `ComputeApp`: `Unknown task name or failed to auto-deploy task: TopPayingCustomersTask` even after cluster restart | Wrong cluster is running — another training's cluster has no `server-tasks.jar` | Run `docker inspect <node1-container-id> --format '{{range .Mounts}}{{.Source}}{{println}}{{end}}'` to confirm which `docker/libs` is mounted; bring down the wrong cluster first |
+| Sidecar build: `Error assembling JAR: Problem creating output file` | Docker Desktop for Windows blocks writes to host directories currently bind-mounted in running containers | Bring the cluster down before building (`docker compose -f docker/docker-compose.yaml down`), then bring it back up after |
+| Schema reload fails with `Binary type has different affinity key fields` for `TrackKey` | `DROP TABLE` removes the cache but not binary type metadata; stale affinity key registration conflicts with the new one | Run `echo "y" \| docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/control.sh --meta remove --typeName training.model.TrackKey` and the same for `training.model.Track`, then reload. If the cluster was restarted, also clear `docker/data/node{1,2,3}/marshaller/` first. |
+| Git Bash on Windows: sidecar `java @/work/...` fails with a mangled path | MSYS path translation converts `/work/...` to a Windows path | Prefix the command with `MSYS_NO_PATHCONV=1`, e.g. `MSYS_NO_PATHCONV=1 docker compose ... run --rm app java @/work/...` |

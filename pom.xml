@@ -9,12 +9,12 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
         <ignite.project>org.gridgain</ignite.project>
-	    <ignite.version>9.1.8</ignite.version>
-	    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <exec.cleanupDaemonThreads>false</exec.cleanupDaemonThreads>
+        <ignite.version>8.9.32</ignite.version>
+        <java.version>17</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <repositories>
@@ -27,7 +27,7 @@
     <dependencies>
         <dependency>
             <groupId>${ignite.project}</groupId>
-            <artifactId>ignite-client</artifactId>
+            <artifactId>ignite-core</artifactId>
             <version>${ignite.version}</version>
         </dependency>
     </dependencies>
@@ -36,23 +36,66 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-		<artifactId>maven-compiler-plugin</artifactId>
-		<version>3.14.0</version>
-                <configuration>
-                    <release>11</release>
-                    <source>11</source>
-                    <target>11</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.5.0</version>
-                <configuration>
-                    <executable>java</executable>
-                    <mainClass>training.ComputeApp</mainClass>
-                </configuration>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!--
+            `apps` profile produces two jars:
+              libs/apps.jar              — shaded fat jar for KeyValueApp and ComputeApp
+              docker/libs/server-tasks.jar — task + model classes only; no ignite-core
+                                            (the server image already has it)
+            Changing the task class requires `docker compose down` then `docker compose up -d` so nodes reload it.
+        -->
+        <profile>
+            <id>apps</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-shade-plugin</artifactId>
+                        <version>3.5.0</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>shade</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <finalName>apps</finalName>
+                            <outputFile>${project.basedir}/libs/apps.jar</outputFile>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <version>3.3.0</version>
+                        <executions>
+                            <execution>
+                                <id>server-tasks-jar</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <finalName>server</finalName>
+                                    <classifier>tasks</classifier>
+                                    <outputDirectory>${project.basedir}/docker/libs</outputDirectory>
+                                    <includes>
+                                        <include>training/compute/**</include>
+                                        <include>training/model/**</include>
+                                    </includes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

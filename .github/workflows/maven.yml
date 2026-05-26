@@ -2,34 +2,20 @@ name: Java CI with Maven
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "gg8_docker" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "gg8_docker" ]
 
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
-        java-version: [ '11', '17', '21' ]
-        include:
-          - os: macos-latest
-            architecture: arm64
-          - os: ubuntu-latest
-            architecture: x64
-          - os: windows-latest
-            architecture: x64
-
-    runs-on: ${{ matrix.os }}
-
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
-    - name: Set up JDK ${{ matrix.java-version }}
-      uses: actions/setup-java@v5
-      with:
-        java-version: ${{ matrix.java-version }}
-        distribution: 'temurin'
-        cache: maven
-        architecture: ${{ matrix.architecture }}
-    - name: Build with Maven
-      run: mvn clean package
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      - name: Build with Maven
+        run: mvn -B clean package -P apps

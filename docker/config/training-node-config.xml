@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Training cluster node configuration. Inherits IgniteConfiguration defaults;
+  overrides only discovery (static IPs for reliable discovery in Docker) and
+  thin-client compute (required by ComputeApp). Persistence is OFF.
+-->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+         http://www.springframework.org/schema/beans
+         http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+  <bean id="grid.cfg" class="org.apache.ignite.configuration.IgniteConfiguration">
+
+    <property name="discoverySpi">
+      <bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
+        <property name="ipFinder">
+          <bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder">
+            <property name="addresses">
+              <list>
+                <value>node1:47500..47509</value>
+                <value>node2:47500..47509</value>
+                <value>node3:47500..47509</value>
+              </list>
+            </property>
+          </bean>
+        </property>
+      </bean>
+    </property>
+
+    <property name="peerClassLoadingEnabled" value="true"/>
+
+    <!-- Server default is 0 (disabled); ComputeApp needs thin-client compute. -->
+    <property name="clientConnectorConfiguration">
+      <bean class="org.apache.ignite.configuration.ClientConnectorConfiguration">
+        <property name="thinClientConfiguration">
+          <bean class="org.apache.ignite.configuration.ThinClientConfiguration">
+            <property name="maxActiveComputeTasksPerConnection" value="100"/>
+          </bean>
+        </property>
+      </bean>
+    </property>
+
+    <!-- Uncomment to enable native persistence (cluster starts INACTIVE; activate once). -->
+    <!--
+    <property name="dataStorageConfiguration">
+      <bean class="org.apache.ignite.configuration.DataStorageConfiguration">
+        <property name="defaultDataRegionConfiguration">
+          <bean class="org.apache.ignite.configuration.DataRegionConfiguration">
+            <property name="persistenceEnabled" value="true"/>
+          </bean>
+        </property>
+      </bean>
+    </property>
+    -->
+
+  </bean>
+
+</beans>

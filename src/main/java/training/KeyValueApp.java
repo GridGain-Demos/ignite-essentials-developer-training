@@ -17,40 +17,54 @@
 
 package training;
 
-import org.apache.ignite.client.IgniteClient;
 import training.model.Artist;
-import org.apache.ignite.Ignite;
+import org.apache.ignite.Ignition;
+import org.apache.ignite.client.ClientCache;
+import org.apache.ignite.client.IgniteClient;
+import org.apache.ignite.configuration.ClientConfiguration;
 
 
 /**
- * The application reads Artists from the cluster using key-value requests. Complete the TODO
- * item to see how Ignite distributes records across partitions and nodes.
+ * Reads Artists from the cluster using key-value requests via the thin
+ * client protocol. Connects to the address in the IGNITE_ADDRESS env var
+ * (localhost:10800 by default; node1:10800 when running in the docker sidecar).
  */
 public class KeyValueApp {
 
-    public static void main(String[] args) throws Exception {
-        try (var ignite = IgniteClient.builder()
-                .addresses("127.0.0.1:10800")
-                .build()
-        ) {
-            getArtistsDistribution(ignite);
+    public static void main(String[] args) {
+        String addr = System.getenv().getOrDefault("IGNITE_ADDRESS", "localhost:10800");
+        ClientConfiguration cfg = new ClientConfiguration().setAddresses(addr);
+
+        try (IgniteClient client = Ignition.startClient(cfg)) {
+            System.out.println(">>> Connected to " + addr);
+
+            getArtistsDistribution(client);
         }
     }
 
-    private static void getArtistsDistribution(Ignite ignite) {
-
-        var artistCache = ignite.tables().table("Artist").keyValueView(Integer.class, Artist.class);
+    private static void getArtistsDistribution(IgniteClient client) {
+        ClientCache<Integer, Artist> artistCache = client.cache("Artist");
 
         for (int artistKey = 1; artistKey < 100; artistKey++) {
-            Artist artist = artistCache.get(null, artistKey);
+            Artist artist = artistCache.get(artistKey);
 
-            /**
-             * TODO #1: print partitions and nodes every artistKey is mapped to.
-             * Hint, use ignite.affinity(...).partition(...) and .mapPartitionToNode(...) methods.
+            /*
+             * TODO #1: for each artistKey, determine which partition it
+             * belongs to and which node currently holds that partition.
+             *
+             * No Affinity API on the thin client — use SYS views instead:
+             *
+             *   SELECT * FROM SYS.NODES;
+             *   SELECT CACHE_NAME, CACHE_GROUP_NAME FROM SYS.CACHES
+             *     WHERE CACHE_NAME = 'Artist';
+             *   SELECT * FROM SYS.PARTITION_STATES
+             *     WHERE CACHE_GROUP_NAME = 'Artist' AND STATE = 'OWNING'
+             *     ORDER BY PARTITION;
+             *
+             * (Hint: client.query(new SqlFieldsQuery(...)).getAll())
              */
 
             System.out.println(artist);
         }
-
     }
 }
