@@ -8,14 +8,28 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        java-version: [ '11', '17', '21' ]
+        include:
+          - os: macos-latest
+            architecture: arm64
+          - os: ubuntu-latest
+            architecture: x64
+          - os: windows-latest
+            architecture: x64
+
+    runs-on: ${{ matrix.os }}
+
     steps:
       - uses: actions/checkout@v6
-      - name: Set up JDK 17
+      - name: Set up JDK ${{ matrix.java-version }}
         uses: actions/setup-java@v5
         with:
-          java-version: '17'
+          java-version: ${{ matrix.java-version }}
           distribution: 'temurin'
           cache: maven
+          architecture: ${{ matrix.architecture }}
       - name: Build with Maven
         run: mvn -B clean package -P apps
