@@ -62,7 +62,7 @@ The sidecar build writes to `docker/libs/` while the server nodes have that dire
 ## 1. Clone the Project
 
 ```bash
-git clone -b gg8_docker https://github.com/GridGain-Demos/ignite-essentials-developer-training.git
+git clone https://github.com/GridGain-Demos/ignite-essentials-developer-training.git
 cd ignite-essentials-developer-training
 ```
 
