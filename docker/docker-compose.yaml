@@ -10,7 +10,7 @@
 #     mount and the container's filesystem.
 
 x-gg-node: &gg-node
-  image: gridgain/enterprise:8.9.32-openjdk17-slim
+  image: gridgain/enterprise:8.9.33-openjdk17-slim
   environment:
     CONFIG_URI: /opt/config/training-node-config.xml
     JVM_OPTS: "-Xms2g -Xmx2g -server -XX:MaxMetaspaceSize=256m -Djava.net.preferIPv4Stack=true"
