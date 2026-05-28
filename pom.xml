@@ -11,7 +11,7 @@
     <properties>
         <ignite.project>org.gridgain</ignite.project>
         <ignite.version>8.9.33</ignite.version>
-        <java.version>17</java.version>
+        <java.version>11</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
