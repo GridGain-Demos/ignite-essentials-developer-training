@@ -20,16 +20,14 @@ Check [the complete schedule](https://www.gridgain.com/products/services/trainin
     git clone https://github.com/GridGain-Demos/ignite-essentials-developer-training.git
     ```
 
-2. (optionally), open the project in your favourite IDE such as IntelliJ or Eclipse, or just use a simple text editor
+2. Switch to the correct branch:
+
+    ```bash
+    git checkout gg9
+    ```
+
+3. (optionally), open the project in your favourite IDE such as IntelliJ or Eclipse, or just use a simple text editor
 and command-line instructions prepared for all the samples.
-
-## Sign up for GridGain's Nebula service
-
-We'll use the Control Center component to execute SQL queries and view cluster internals.
-
-1. Open portal.gridgain.com in your browser
-2. Click the "Sign up" button
-3. Enter your details
 
 ## Starting Ignite Cluster
 
@@ -37,22 +35,29 @@ Start a Three-node Ignite cluster:
 
 1. Open a terminal window and navigate to the root directory of this project.
 
-2. Open `src/main/resources/controlcenter.conf` in your IDE or text editor
-
-3. Update the `connector.username` and `connector.password` values to the values you used to create your Nebula account.
-
-4. Start your nodes using Docker Compose:
+2. Start your nodes using Docker Compose:
 
     ```bash
    docker compose up -d
    ```
 
-5. Switch back to your browser and select `Attach GridGain`
-6. In the "Connector" dropdown, select `Ignite Essentials`
-7. The `URL of the REST API` is `http://node1:10300`
-8. Click `Continue`
-9. Click `Attach`
-10. Initialize the cluster by clicking the `Initialize` button at the top-right of the screen. Drop in your license file as suggested
+3. Start a GridGain CLI:
+
+    ```bash
+    docker run -v ./gridgain-license.json:/opt/gridgain/downloads/gridgain-license.json --rm --network ignite3_default -it gridgain/gridgain9:9.1.8-openjdk21 cli
+    ```
+
+4. Connect to the cluster:
+
+    ```
+    connect http://node1:10300
+    ```
+
+5. Initialize the cluster:
+
+    ```
+    cluster init --name=essentials --license=/opt/gridgain/downloads/gridgain-license.json
+    ```
 
 ## Creating Media Store Schema and Loading Data
 
@@ -83,10 +88,31 @@ Keep the connection open as you'll use it for following exercises.
 
 ## Data Partitioning - Checking Data Distribution
 
-With the Media Store database loaded, you can check how Ignite distributed the records within the cluster:
+With the Media Store database loaded, you can check how GridGain distributed the records within the cluster:
 
-1. Switch to your browser and select the "Tables" tab
-2. While on that screen, follow the instructor to learn some insights.
+1. Switch the CLI to SQL mode by typing: `sql`
+2. Run the following query to show how records in the artist table are distributed across partitions:
+
+```sql
+SELECT __part, COUNT(1) FROM artist GROUP BY __part;
+```
+
+3. Find an artist, for example:
+
+```sql
+SELECT * FROM artist WHERE __part > 5 LIMIT 10;
+```
+4. Find the partition:
+
+```sql
+SELECT artistid, __part FROM artist WHERE name = 'Black Sabbath';
+```
+
+5. Check the partitions that are used to store the related album:
+
+```sql
+SELECT albumid, artistid, __part FROM album WHERE artistid=12;
+```
 
 ## Affinity Co-location - Optimizing Complex SQL Queries With JOINs
 
@@ -95,7 +121,7 @@ going to run basic SQL operations as well as more advanced ones.
 
 ### Querying Single Table
 
-1. In your browser, select the "Queries" tab
+1. Enter SQL mode in the CLI by entering: `sql`
 
 2. Run the following query to find top-20 longest tracks:
 
