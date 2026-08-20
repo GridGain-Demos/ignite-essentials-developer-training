@@ -44,7 +44,7 @@ Start a Three-node Ignite cluster:
 3. Start a GridGain CLI:
 
     ```bash
-    docker run -v ./gridgain-license.json:/opt/gridgain/downloads/gridgain-license.json --rm --network ignite3_default -it gridgain/gridgain9:9.1.8-openjdk21 cli
+    docker run --rm --network ignite3_default -it apacheignite/ignite:3.1.0 cli
     ```
 
 4. Connect to the cluster:
@@ -56,7 +56,7 @@ Start a Three-node Ignite cluster:
 5. Initialize the cluster:
 
     ```
-    cluster init --name=essentials --license=/opt/gridgain/downloads/gridgain-license.json
+    cluster init --name=essentials 
     ```
 
 ## Creating Media Store Schema and Loading Data
@@ -69,7 +69,7 @@ Now you need to create a Media Store schema and load the cluster with sample dat
 	a. Start the Command Line Interface (CLI)
 
     ```bash
-   docker run -v ./config/media_store.sql:/opt/gridgain/downloads/media_store.sql --rm --network ignite3_default -it gridgain/gridgain9:9.1.8-openjdk21 cli
+   docker run -v ./config/media_store.sql:/opt/ignite/downloads/media_store.sql --rm --network ignite3_default -it apacheignite/ignite:3.1.0 cli
    ```
 
    b. Connect to the cluster.
@@ -81,7 +81,7 @@ Now you need to create a Media Store schema and load the cluster with sample dat
    c. Execute SQL command to load the sample data.
 
    ```bash
-   sql --file=/opt/gridgain/downloads/media_store.sql
+   sql --file=/opt/ignite/downloads/media_store.sql
     ```
 
 Keep the connection open as you'll use it for following exercises.
@@ -209,7 +209,7 @@ merges partial results.
 	a. Start the CLI.
 
     ```bash
-   docker run -v ./target/ignite-essentials-developer-training-1.0-SNAPSHOT.jar:/opt/gridgain/downloads/ignite-essentials-developer-training-1.0-SNAPSHOT.jar --rm --network ignite3_default -it gridgain/gridgain9:9.1.8-openjdk21 cli
+   docker run -v ./target/ignite-essentials-developer-training-1.0-SNAPSHOT.jar:/opt/ignite/downloads/ignite-essentials-developer-training-1.0-SNAPSHOT.jar --rm --network ignite3_default -it apacheignite/ignite:3.1.0 cli
    ```
 
 	b. Connect to the cluster.
@@ -221,7 +221,7 @@ merges partial results.
    c. Deploy the code to the cluster.
 
    ```bash
-   cluster unit deploy --version 1.0.0 --path=/opt/gridgain/downloads/ignite-essentials-developer-training-1.0-SNAPSHOT.jar essentialsCompute
+   cluster unit deploy --version 1.0.0 --path=/opt/ignite/downloads/ignite-essentials-developer-training-1.0-SNAPSHOT.jar essentialsCompute
     ```
 
     It's also possible to use Control Center to deploy your code if you prefer. Study the "Deployment" tab to find out more.
