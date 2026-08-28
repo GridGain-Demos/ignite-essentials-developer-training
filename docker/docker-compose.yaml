@@ -20,8 +20,8 @@ services:
   node1:
     <<: *gg-node
     hostname: node1
-#    ports:
-#      - "10800:10800"
+    ports:
+      - "10800:10800"
     volumes:
       - ./config/training-node-config.xml:/opt/config/training-node-config.xml:ro
       - ./config/ignite-log4j2.xml:/opt/gridgain/config/ignite-log4j2.xml:ro

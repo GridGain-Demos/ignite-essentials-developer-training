@@ -83,15 +83,21 @@ Verify all three nodes joined:
 **Bash:**
 
 ```bash
-docker compose -f docker/docker-compose.yaml logs node1 | grep "Topology snapshot" | tail -1
+docker compose -f docker/docker-compose.yaml logs | grep -o "servers=[0-9]*" | sort -u
 ```
 
 **PowerShell:**
 ```powershell
-docker compose -f docker/docker-compose.yaml logs node1 | Select-String "Topology snapshot" | Select-Object -Last 1
+docker compose -f docker/docker-compose.yaml logs | Select-String -Pattern "servers=\d+" -AllMatches | ForEach-Object { $_.Matches.Value } | Sort-Object -Unique
 ```
 
-Expect `servers=3` in the output.
+Each node logs a topology snapshot every time the cluster membership changes, so you will see
+`servers=1` and `servers=2` from the nodes that started first. What matters is that
+**`servers=3` appears** in the list.
+
+Don't shortcut this to `... logs node1 | grep "Topology snapshot" | tail -1`. A node prints its
+own join-time snapshot *after* the live one, so the last line of a single node's log can report a
+lower count than the cluster actually has.
 
 ---
 
@@ -361,7 +367,7 @@ Expect output similar to:
 TopCustomer{customerId=6, fullName='Helena Holý', ...}
 TopCustomer{customerId=26, fullName='Richard Cunningham', ...}
 TopCustomer{customerId=57, fullName='Luis Rojas', ...}
-TopCustomer{customerId=46, fullName='Hugh O''Reilly', ...}
+TopCustomer{customerId=46, fullName='Hugh O'Reilly', ...}
 TopCustomer{customerId=45, fullName='Ladislav Kovács', ...}
 ```
 
@@ -452,5 +458,5 @@ The `docker/data/` directory is kept on the host (holds logs; `db/marshaller/` i
 | `ComputeApp`: `Compute grid functionality is disabled for thin clients` | `ThinClientConfiguration.maxActiveComputeTasksPerConnection=0` on the server | Check `docker/config/training-node-config.xml` has the override set to 100 |
 | `ComputeApp`: `Unknown task name or failed to auto-deploy task: TopPayingCustomersTask` even after cluster restart | Wrong cluster is running — another training's cluster has no `server-tasks.jar` | Run `docker inspect <node1-container-id> --format '{{range .Mounts}}{{.Source}}{{println}}{{end}}'` to confirm which `docker/libs` is mounted; bring down the wrong cluster first |
 | Sidecar build: `Error assembling JAR: Problem creating output file` | Docker Desktop for Windows blocks writes to host directories currently bind-mounted in running containers | Bring the cluster down before building (`docker compose -f docker/docker-compose.yaml down`), then bring it back up after |
-| Schema reload fails with `Binary type has different affinity key fields` for `TrackKey` | `DROP TABLE` removes the cache but not binary type metadata; stale affinity key registration conflicts with the new one | Run `echo "y" \| docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/control.sh --meta remove --typeName training.model.TrackKey` and the same for `training.model.Track`, then reload. If the cluster was restarted, also clear `docker/data/node{1,2,3}/marshaller/` first. |
+| Schema reload fails with `Binary type has different affinity key fields` for `TrackKey` | `DROP TABLE` removes the cache but not binary type metadata; stale affinity key registration conflicts with the new one | Run `echo "y" \| docker compose -f docker/docker-compose.yaml exec -T node1 /opt/gridgain/bin/control.sh --meta remove --typeName training.model.TrackKey` and the same for `training.model.Track`, then reload. If the cluster was restarted, also clear `docker/data/node{1,2,3}/db/marshaller/` first. |
 | Git Bash on Windows: sidecar `java @/work/...` fails with a mangled path | MSYS path translation converts `/work/...` to a Windows path | Prefix the command with `MSYS_NO_PATHCONV=1`, e.g. `MSYS_NO_PATHCONV=1 docker compose ... run --rm app java @/work/...` |
